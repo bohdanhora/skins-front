@@ -3,7 +3,7 @@
 import { ExternalLink, KeyRound, TriangleAlert } from 'lucide-react';
 
 import type { Listing, Listings, MarketId } from '@/lib/api/types';
-import { formatUsd } from '@/lib/format/money';
+import { formatPercent, formatUsd } from '@/lib/format/money';
 import { MARKETS, MARKET_ORDER } from '@/lib/markets';
 import { cn } from '@/lib/utils/cn';
 
@@ -13,9 +13,11 @@ interface ListingListProps {
   data: Listings;
   /** Inside the item card the name is already known, so it is not repeated. */
   compact?: boolean;
+  /** Show the overpay for the searched stickers: the sticker search ranks by it. */
+  deal?: boolean;
 }
 
-export const ListingList = ({ data, compact = false }: ListingListProps) => (
+export const ListingList = ({ data, compact = false, deal = false }: ListingListProps) => (
   <div className="space-y-3">
     <SourceNotes sources={data.sources} />
     {data.listings.length === 0 ? (
@@ -23,7 +25,12 @@ export const ListingList = ({ data, compact = false }: ListingListProps) => (
     ) : (
       <ul className="divide-border border-border bg-surface divide-y overflow-hidden rounded-2xl border">
         {data.listings.map((listing) => (
-          <ListingRow key={`${listing.market}-${listing.id}`} listing={listing} compact={compact} />
+          <ListingRow
+            key={`${listing.market}-${listing.id}`}
+            listing={listing}
+            compact={compact}
+            deal={deal}
+          />
         ))}
       </ul>
     )}
@@ -58,7 +65,15 @@ const SourceNote = ({ market, status }: { market: MarketId; status: string }) =>
   </span>
 );
 
-const ListingRow = ({ listing, compact }: { listing: Listing; compact: boolean }) => (
+const ListingRow = ({
+  listing,
+  compact,
+  deal,
+}: {
+  listing: Listing;
+  compact: boolean;
+  deal: boolean;
+}) => (
   <li>
     <a
       href={listing.url}
@@ -109,11 +124,46 @@ const ListingRow = ({ listing, compact }: { listing: Listing; compact: boolean }
             ) : null}
           </div>
         ) : null}
+        {deal && listing.basePrice !== null ? (
+          <p className="text-foreground-muted numeric text-xs">
+            Без наклеек от {formatUsd(listing.basePrice)},{' '}
+            {listing.overpay !== null && listing.overpay > 0
+              ? `доплата ${formatUsd(listing.overpay)}`
+              : 'доплаты нет'}
+          </p>
+        ) : null}
       </div>
-      <div className="flex items-center gap-2">
-        <span className="numeric text-[0.9375rem] font-semibold">{formatUsd(listing.price)}</span>
-        <ExternalLink className="text-foreground-subtle size-3.5" aria-hidden />
+      <div className="flex flex-col items-end gap-1.5">
+        <span className="flex items-center gap-2">
+          <span className="numeric text-[0.9375rem] font-semibold">{formatUsd(listing.price)}</span>
+          <ExternalLink className="text-foreground-subtle size-3.5" aria-hidden />
+        </span>
+        {deal ? <DealBadge listing={listing} /> : null}
       </div>
     </a>
   </li>
 );
+
+/** Up to this share of the sticker price the sticker is basically a bonus. */
+const GOOD_SHARE = 0.15;
+
+const DealBadge = ({ listing }: { listing: Listing }) => {
+  if (listing.overpayShare === null) {
+    return null;
+  }
+
+  const free = (listing.overpay ?? 0) <= 0;
+  const good = listing.overpayShare <= GOOD_SHARE;
+
+  return (
+    <span
+      title="Сколько ты доплачиваешь за наклейки по сравнению с их ценой по отдельности"
+      className={cn(
+        'numeric rounded-lg px-2 py-0.5 text-xs font-semibold',
+        good ? 'bg-gain-soft text-gain' : 'bg-surface-muted text-foreground-muted',
+      )}
+    >
+      {free ? 'наклейки бесплатно' : `за ${formatPercent(listing.overpayShare * 100)} их цены`}
+    </span>
+  );
+};

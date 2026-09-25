@@ -123,6 +123,14 @@ export interface Listing {
   float: string | null;
   stickers: ListingSticker[];
   stickersValue: number;
+  /** Cheapest listing of the same item. */
+  basePrice: number | null;
+  /** Paid above the base price for this exact listing. */
+  overpay: number | null;
+  /** Price of the searched stickers on this listing. */
+  wantedValue: number;
+  /** Overpay as a share of the searched stickers price, lower is better. */
+  overpayShare: number | null;
   url: string;
 }
 

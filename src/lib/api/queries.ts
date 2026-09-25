@@ -104,8 +104,13 @@ export const useItemListings = (name: string | null, enabled: boolean) =>
     enabled: name !== null && enabled,
   });
 
+export type StickerSkinsSort = 'deal' | 'overpay' | 'price';
+
 export interface StickerSkinsQuery {
   stickers: string[];
+  /** Exact item name or any part of it. */
+  item?: string;
+  sort: StickerSkinsSort;
   minPrice?: number;
   maxPrice?: number;
 }
@@ -116,7 +121,13 @@ export const useSkinsWithStickers = (query: StickerSkinsQuery, enabled: boolean)
     queryFn: ({ signal }) =>
       apiGet<Listings>(
         '/stickers/skins',
-        { stickers: query.stickers, minPrice: query.minPrice, maxPrice: query.maxPrice },
+        {
+          stickers: query.stickers,
+          item: query.item,
+          sort: query.sort,
+          minPrice: query.minPrice,
+          maxPrice: query.maxPrice,
+        },
         signal,
       ),
     enabled: enabled && query.stickers.length > 0,
