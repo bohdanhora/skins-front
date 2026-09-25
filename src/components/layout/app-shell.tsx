@@ -1,6 +1,6 @@
 'use client';
 
-import { Flame, Gauge, Heart, Search, Settings, Sparkles, Sticker } from 'lucide-react';
+import { BookOpen, Flame, Gauge, Heart, Search, Settings, Sparkles, Sticker } from 'lucide-react';
 import type { Route } from 'next';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -22,6 +22,7 @@ const NAV_ITEMS: NavItem[] = [
   { href: '/', label: 'Выгодно', icon: Sparkles },
   { href: '/top', label: 'Топ', icon: Flame },
   { href: '/search', label: 'Поиск', icon: Search },
+  { href: '/library' as Route, label: 'Библиотека', icon: BookOpen },
   { href: '/float', label: 'Флоат', icon: Gauge },
   { href: '/stickers', label: 'Наклейки', icon: Sticker },
   { href: '/favorites', label: 'Избранное', icon: Heart },
@@ -93,12 +94,12 @@ export const AppShell = ({ children }: { children: ReactNode }) => {
         aria-label="Разделы"
         className="bg-surface/90 border-border fixed inset-x-0 bottom-0 z-30 border-t pb-[env(safe-area-inset-bottom)] backdrop-blur-md lg:hidden"
       >
-        <ul className="flex">
+        <ul className="flex overflow-x-auto">
           {NAV_ITEMS.map(({ href, label, icon: Icon }) => {
             const active = isActive(pathname, href);
 
             return (
-              <li key={href} className="flex-1">
+              <li key={href} className="min-w-16 flex-1">
                 <Link
                   href={href}
                   aria-current={active ? 'page' : undefined}

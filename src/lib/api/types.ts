@@ -103,6 +103,27 @@ export interface ItemFacets {
   collections: { name: string; image: string | null }[];
 }
 
+export interface ItemLibraryOption {
+  value: string;
+  image: string | null;
+  count: number;
+  price: number | null;
+}
+
+export interface ItemLibraryVariant {
+  name: string;
+  image: string | null;
+  price: number | null;
+  phase: MarketPhase | null;
+}
+
+export interface ItemLibrary {
+  categories: { value: ItemCategory; count: number }[];
+  weapons: ItemLibraryOption[];
+  skins: ItemLibraryOption[];
+  variants: ItemLibraryVariant[];
+}
+
 export interface ItemsQuery {
   q?: string;
   category?: ItemCategory;

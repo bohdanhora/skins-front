@@ -14,6 +14,7 @@ import type {
   FloatSearch,
   Item,
   ItemFacets,
+  ItemLibrary,
   ItemsPage,
   ItemsQuery,
   Listings,
@@ -93,6 +94,24 @@ export const useItemFacets = () =>
     queryKey: ['item-facets'],
     queryFn: ({ signal }) => apiGet<ItemFacets>('/items/facets', undefined, signal),
     staleTime: 60 * 60_000,
+  });
+
+export const useItemLibrary = (
+  category: string,
+  weapon: string | null,
+  skin: string | null,
+  enabled = true,
+) =>
+  useQuery({
+    queryKey: ['item-library', category, weapon, skin],
+    queryFn: ({ signal }) =>
+      apiGet<ItemLibrary>(
+        '/items/library',
+        { category, weapon: weapon ?? undefined, skin: skin ?? undefined },
+        signal,
+      ),
+    staleTime: 10 * 60_000,
+    enabled,
   });
 
 export const useSalesChart = (name: string | null) =>
