@@ -67,7 +67,10 @@ export const ItemDialog = ({ name, open, onOpenChange }: ItemDialogProps) => {
 const ItemDetails = ({ item, onNavigate }: { item: Item; onNavigate: () => void }) => {
   const status = useStatus();
   const keysReady =
-    !!status.data && (status.data.whiteMarket.keysConfigured || status.data.dmarket.keysConfigured);
+    !!status.data &&
+    (status.data.whiteMarket.keysConfigured ||
+      status.data.dmarket.keysConfigured ||
+      status.data.csfloat.keysConfigured);
 
   return (
     <div className="space-y-6 pt-3">
@@ -99,7 +102,7 @@ const ItemDetails = ({ item, onNavigate }: { item: Item; onNavigate: () => void 
 
       <Verdict item={item} />
 
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid gap-3 sm:grid-cols-3">
         {MARKET_ORDER.map((market) => (
           <MarketPanel key={market} item={item} market={market} />
         ))}
@@ -118,6 +121,33 @@ const ItemDetails = ({ item, onNavigate }: { item: Item; onNavigate: () => void 
                 ? `, а скупают даже дороже: ${formatUsd(item.dmarket.bid)}`
                 : `, скупают за ${formatUsd(item.dmarket.bid)}`
               : ''}
+          </div>
+        ) : null}
+        {item.sales?.eightWeekAverage ? (
+          <div className="grid grid-cols-3 gap-2">
+            <HistoryStat
+              label="Средняя за 8 недель"
+              value={formatUsd(item.sales.eightWeekAverage)}
+            />
+            <HistoryStat
+              label="Продаж за 8 недель"
+              value={String(item.sales.eightWeekSales ?? 0)}
+            />
+            <HistoryStat
+              label="Тренд за неделю"
+              value={
+                item.sales.trendPercent === null || item.sales.trendPercent === undefined
+                  ? 'мало данных'
+                  : formatPercent(item.sales.trendPercent, true)
+              }
+              tone={
+                item.sales.trendPercent === null || item.sales.trendPercent === undefined
+                  ? undefined
+                  : item.sales.trendPercent >= 0
+                    ? 'gain'
+                    : 'loss'
+              }
+            />
           </div>
         ) : null}
         <SalesChart name={item.name} currentPrice={item.top?.price ?? cheapestListing(item)} />
@@ -141,6 +171,28 @@ const ItemDetails = ({ item, onNavigate }: { item: Item; onNavigate: () => void 
     </div>
   );
 };
+
+const HistoryStat = ({
+  label,
+  value,
+  tone,
+}: {
+  label: string;
+  value: string;
+  tone?: 'gain' | 'loss';
+}) => (
+  <div className="bg-surface-muted rounded-xl px-3 py-2.5">
+    <p className="text-foreground-subtle text-[0.6875rem] leading-tight">{label}</p>
+    <p
+      className={cn(
+        'numeric mt-1 text-sm font-semibold',
+        tone === 'gain' ? 'text-gain' : tone === 'loss' ? 'text-loss' : 'text-foreground',
+      )}
+    >
+      {value}
+    </p>
+  </div>
+);
 
 const Verdict = ({ item }: { item: Item }) => {
   if (!item.gap) {
@@ -200,7 +252,11 @@ const MarketPanel = ({ item, market }: { item: Item; market: MarketId }) => {
           <a
             href={
               quote?.url ??
-              (market === 'whiteMarket' ? 'https://white.market' : 'https://dmarket.com')
+              (market === 'whiteMarket'
+                ? 'https://white.market'
+                : market === 'dmarket'
+                  ? 'https://dmarket.com'
+                  : 'https://csfloat.com')
             }
             target="_blank"
             rel="noreferrer"
@@ -243,8 +299,8 @@ const ResaleSection = ({ item }: { item: Item }) => {
         ) : null}
       </div>
       <p className="text-foreground-subtle text-xs">
-        Уже вычтена комиссия продавца: white.market {fees.whiteMarket}%, DMarket {fees.dmarket}%.
-        Поменять можно в настройках.
+        Уже вычтена комиссия продавца: white.market {fees.whiteMarket}%, DMarket {fees.dmarket}%,
+        CSFloat {fees.csfloat}%. Поменять можно в настройках.
       </p>
     </section>
   );

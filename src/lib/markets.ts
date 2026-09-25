@@ -1,7 +1,16 @@
-import type { DealMode, ItemCategory, MarketId } from '@/lib/api/types';
+import type {
+  DealMode,
+  ItemCategory,
+  ItemEdition,
+  ItemWear,
+  ListingMarketId,
+  MarketId,
+  MarketPhase,
+  TradingMarketId,
+} from '@/lib/api/types';
 
 export const MARKETS: Record<
-  MarketId,
+  ListingMarketId,
   { name: string; short: string; dot: string; text: string; soft: string }
 > = {
   whiteMarket: {
@@ -18,9 +27,52 @@ export const MARKETS: Record<
     text: 'text-market-dm',
     soft: 'bg-market-dm-soft',
   },
+  csfloat: {
+    name: 'CSFloat',
+    short: 'CSFloat',
+    dot: 'bg-[#4f8cff]',
+    text: 'text-[#4f8cff]',
+    soft: 'bg-[#4f8cff]/10',
+  },
 };
 
-export const MARKET_ORDER: MarketId[] = ['whiteMarket', 'dmarket'];
+export const MARKET_ORDER: MarketId[] = ['whiteMarket', 'dmarket', 'csfloat'];
+export const TRADING_MARKET_ORDER: TradingMarketId[] = ['whiteMarket', 'dmarket'];
+
+export const MARKET_FILTERS: { value: 'all' | MarketId; label: string }[] = [
+  { value: 'all', label: 'Любая площадка' },
+  { value: 'whiteMarket', label: 'Дешевле на White' },
+  { value: 'dmarket', label: 'Дешевле на DMarket' },
+  { value: 'csfloat', label: 'Дешевле на CSFloat' },
+];
+
+export const WEAR_FILTERS: { value: 'all' | ItemWear; label: string }[] = [
+  { value: 'all', label: 'Любой износ' },
+  { value: 'FN', label: 'FN' },
+  { value: 'MW', label: 'MW' },
+  { value: 'FT', label: 'FT' },
+  { value: 'WW', label: 'WW' },
+  { value: 'BS', label: 'BS' },
+];
+
+export const EDITION_FILTERS: { value: 'all' | ItemEdition; label: string }[] = [
+  { value: 'all', label: 'Обычный / любой' },
+  { value: 'normal', label: 'Только обычные' },
+  { value: 'stattrak', label: 'StatTrak™' },
+  { value: 'souvenir', label: 'Souvenir' },
+];
+
+export const PHASE_FILTERS: { value: 'all' | MarketPhase; label: string }[] = [
+  { value: 'all', label: 'Любая фаза' },
+  { value: 'phase-1', label: 'Phase 1' },
+  { value: 'phase-2', label: 'Phase 2' },
+  { value: 'phase-3', label: 'Phase 3' },
+  { value: 'phase-4', label: 'Phase 4' },
+  { value: 'ruby', label: 'Ruby' },
+  { value: 'sapphire', label: 'Sapphire' },
+  { value: 'emerald', label: 'Emerald' },
+  { value: 'black-pearl', label: 'Black Pearl' },
+];
 
 export const CATEGORIES: { value: ItemCategory; label: string }[] = [
   { value: 'knife', label: 'Ножи' },

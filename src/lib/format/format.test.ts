@@ -27,6 +27,7 @@ describe('parseItemName', () => {
       wear: 'FT',
       statTrak: true,
       souvenir: false,
+      phase: null,
     });
   });
 
@@ -47,6 +48,11 @@ describe('parseItemName', () => {
       souvenir: true,
     });
     expect(parseItemName('Revolution Case')).toMatchObject({ base: 'Revolution Case', detail: '' });
+    expect(parseItemName('★ Karambit | Doppler (Factory New) [Sapphire]')).toMatchObject({
+      detail: 'Doppler',
+      phase: 'Sapphire',
+      wear: 'FN',
+    });
   });
 });
 

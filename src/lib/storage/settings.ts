@@ -1,22 +1,27 @@
 'use client';
 
-import { useCallback } from 'react';
+import { useCallback, useMemo } from 'react';
 
 import { useLocalStore } from './local-store';
 
 export interface Fees {
-  /** Seller fee in percent. */
   whiteMarket: number;
   dmarket: number;
+  csfloat: number;
 }
 
-export const DEFAULT_FEES: Fees = { whiteMarket: 5, dmarket: 5 };
+export const DEFAULT_FEES: Fees = { whiteMarket: 5, dmarket: 5, csfloat: 2 };
 
 const FEES_KEY = 'skins.fees';
 const FAVORITES_KEY = 'skins.favorites';
 const NO_FAVORITES: string[] = [];
 
-export const useFeesSetting = () => useLocalStore<Fees>(FEES_KEY, DEFAULT_FEES);
+export const useFeesSetting = (): [Fees, (next: Fees) => void] => {
+  const [stored, setStored] = useLocalStore<Partial<Fees>>(FEES_KEY, DEFAULT_FEES);
+  const fees = useMemo(() => ({ ...DEFAULT_FEES, ...stored }), [stored]);
+
+  return [fees, setStored];
+};
 
 export const useFees = (): Fees => useFeesSetting()[0];
 

@@ -2,18 +2,32 @@
 
 import { SearchX } from 'lucide-react';
 import type { Route } from 'next';
+import Image from 'next/image';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useEffect, useState } from 'react';
 
-import { CategoryChips, FilterBar, PriceRange, SearchField } from '@/components/items/filters';
+import {
+  CategoryChips,
+  FilterBar,
+  ItemFilterSelects,
+  PriceRange,
+  SearchField,
+} from '@/components/items/filters';
 import { GridSkeleton, ItemGrid } from '@/components/items/item-grid';
 import { EmptyState } from '@/components/states/empty-state';
 import { Chip } from '@/components/ui/chip';
 import { parseMoney } from '@/components/ui/input';
 import { Select } from '@/components/ui/select';
 import { useDebouncedValue } from '@/hooks/use-debounced-value';
-import { useItems } from '@/lib/api/queries';
-import type { ItemCategory, ItemSort } from '@/lib/api/types';
+import { useItemFacets, useItems } from '@/lib/api/queries';
+import type {
+  ItemCategory,
+  ItemEdition,
+  ItemSort,
+  ItemWear,
+  MarketId,
+  MarketPhase,
+} from '@/lib/api/types';
 
 const SORTS: { value: ItemSort; label: string }[] = [
   { value: 'popular', label: 'Сначала популярные' },
@@ -21,6 +35,7 @@ const SORTS: { value: ItemSort; label: string }[] = [
   { value: 'priceDesc', label: 'Сначала дорогие' },
   { value: 'benefit', label: 'Больше разница в цене' },
   { value: 'name', label: 'По алфавиту' },
+  { value: 'sales8w', label: 'Больше продаж за 8 недель' },
 ];
 
 const QUICK_SEARCHES = ['AK-47', 'AWP', 'Karambit', 'Butterfly', 'Glock-18', 'Case', 'Doppler'];
@@ -33,12 +48,17 @@ const SearchPage = () => {
   const [minPrice, setMinPrice] = useState('');
   const [maxPrice, setMaxPrice] = useState('');
   const [sort, setSort] = useState<ItemSort>('popular');
+  const [wear, setWear] = useState<'all' | ItemWear>('all');
+  const [edition, setEdition] = useState<'all' | ItemEdition>('all');
+  const [phase, setPhase] = useState<'all' | MarketPhase>('all');
+  const [cheapestOn, setCheapestOn] = useState<'all' | MarketId>('all');
+  const [collection, setCollection] = useState('');
+  const facets = useItemFacets();
 
   const search = useDebouncedValue(q);
   const priceFrom = useDebouncedValue(minPrice);
   const priceTo = useDebouncedValue(maxPrice);
 
-  // Keep the query in the address bar, so a search can be shared or bookmarked.
   useEffect(() => {
     const trimmed = search.trim();
 
@@ -50,6 +70,11 @@ const SearchPage = () => {
   const items = useItems({
     q: search.trim() || undefined,
     category,
+    wear: wear === 'all' ? undefined : wear,
+    edition: edition === 'all' ? undefined : edition,
+    phase: phase === 'all' ? undefined : phase,
+    cheapestOn: cheapestOn === 'all' ? undefined : cheapestOn,
+    collection: collection || undefined,
     sort,
     minPrice: parseMoney(priceFrom),
     maxPrice: parseMoney(priceTo),
@@ -98,6 +123,43 @@ const SearchPage = () => {
           />
         </div>
         <CategoryChips value={category} onChange={setCategory} />
+        {!q && !collection && facets.data?.collections.length ? (
+          <div className="no-scrollbar -mx-4 flex gap-2 overflow-x-auto px-4 sm:mx-0 sm:px-0">
+            {facets.data.collections.slice(0, 12).map((entry) => (
+              <button
+                key={entry.name}
+                type="button"
+                onClick={() => setCollection(entry.name)}
+                className="border-border bg-surface-muted hover:border-accent/40 flex min-w-44 items-center gap-3 rounded-2xl border p-2 text-left"
+              >
+                <span className="bg-surface flex size-12 shrink-0 items-center justify-center rounded-xl">
+                  {entry.image ? (
+                    <Image
+                      src={entry.image}
+                      alt=""
+                      width={44}
+                      height={44}
+                      className="object-contain"
+                    />
+                  ) : null}
+                </span>
+                <span className="line-clamp-2 text-xs font-medium">{entry.name}</span>
+              </button>
+            ))}
+          </div>
+        ) : null}
+        <ItemFilterSelects
+          wear={wear}
+          onWearChange={setWear}
+          edition={edition}
+          onEditionChange={setEdition}
+          phase={phase}
+          onPhaseChange={setPhase}
+          cheapestOn={cheapestOn}
+          onCheapestOnChange={setCheapestOn}
+          collection={collection}
+          onCollectionChange={setCollection}
+        />
       </FilterBar>
 
       <ItemGrid

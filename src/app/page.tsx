@@ -6,6 +6,7 @@ import { useState } from 'react';
 import {
   CategoryChips,
   FilterBar,
+  ItemFilterSelects,
   PriceRange,
   SearchField,
   Toggle,
@@ -17,12 +18,19 @@ import { Select } from '@/components/ui/select';
 import { parseMoney } from '@/components/ui/input';
 import { useDebouncedValue } from '@/hooks/use-debounced-value';
 import { useItems, useStatus } from '@/lib/api/queries';
-import type { DealMode, ItemCategory, ItemSort } from '@/lib/api/types';
+import type {
+  DealMode,
+  ItemCategory,
+  ItemEdition,
+  ItemSort,
+  ItemWear,
+  MarketId,
+  MarketPhase,
+} from '@/lib/api/types';
 import { DEAL_MODES } from '@/lib/markets';
 
 type Mode = Exclude<DealMode, 'all'>;
 
-/** Enough listings on both sides that the price is real, not one lonely lot. */
 const LIQUID_LISTINGS = 5;
 
 const SORTS: { value: ItemSort; label: string }[] = [
@@ -41,6 +49,11 @@ const DealsPage = () => {
   const [maxPrice, setMaxPrice] = useState('');
   const [liquidOnly, setLiquidOnly] = useState(true);
   const [sort, setSort] = useState<ItemSort>('benefit');
+  const [wear, setWear] = useState<'all' | ItemWear>('all');
+  const [edition, setEdition] = useState<'all' | ItemEdition>('all');
+  const [phase, setPhase] = useState<'all' | MarketPhase>('all');
+  const [cheapestOn, setCheapestOn] = useState<'all' | MarketId>('all');
+  const [collection, setCollection] = useState('');
 
   const status = useStatus();
   const search = useDebouncedValue(q);
@@ -51,6 +64,11 @@ const DealsPage = () => {
     mode,
     q: search.trim() || undefined,
     category,
+    wear: wear === 'all' ? undefined : wear,
+    edition: edition === 'all' ? undefined : edition,
+    phase: phase === 'all' ? undefined : phase,
+    cheapestOn: cheapestOn === 'all' ? undefined : cheapestOn,
+    collection: collection || undefined,
     sort,
     minPrice: parseMoney(priceFrom),
     maxPrice: parseMoney(priceTo),
@@ -66,7 +84,7 @@ const DealsPage = () => {
       <section className="space-y-2">
         <h1 className="page-title">Где сейчас выгоднее</h1>
         <p className="text-foreground-muted max-w-2xl text-[0.9375rem] leading-relaxed">
-          Сравниваем цены white.market и DMarket
+          Сравниваем цены white.market, DMarket и CSFloat
           {compared ? ` на ${compared.toLocaleString('ru-RU')} предметов` : ''} и показываем, где
           купить дешевле и на чём можно заработать.
         </p>
@@ -106,6 +124,18 @@ const DealsPage = () => {
           />
         </div>
         <CategoryChips value={category} onChange={setCategory} />
+        <ItemFilterSelects
+          wear={wear}
+          onWearChange={setWear}
+          edition={edition}
+          onEditionChange={setEdition}
+          phase={phase}
+          onPhaseChange={setPhase}
+          cheapestOn={cheapestOn}
+          onCheapestOnChange={setCheapestOn}
+          collection={collection}
+          onCollectionChange={setCollection}
+        />
         <Toggle
           checked={liquidOnly}
           onChange={setLiquidOnly}

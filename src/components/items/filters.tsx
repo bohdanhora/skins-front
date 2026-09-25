@@ -5,8 +5,16 @@ import type { ReactNode } from 'react';
 
 import { Chip } from '@/components/ui/chip';
 import { IconInput, MoneyInput } from '@/components/ui/input';
-import type { ItemCategory } from '@/lib/api/types';
-import { CATEGORIES } from '@/lib/markets';
+import { Select } from '@/components/ui/select';
+import { useItemFacets } from '@/lib/api/queries';
+import type { ItemCategory, ItemEdition, ItemWear, MarketId, MarketPhase } from '@/lib/api/types';
+import {
+  CATEGORIES,
+  EDITION_FILTERS,
+  MARKET_FILTERS,
+  PHASE_FILTERS,
+  WEAR_FILTERS,
+} from '@/lib/markets';
 import { cn } from '@/lib/utils/cn';
 
 interface CategoryChipsProps {
@@ -135,3 +143,65 @@ export const FilterBar = ({ children }: { children: ReactNode }) => (
     {children}
   </div>
 );
+
+interface ItemFilterSelectsProps {
+  wear: 'all' | ItemWear;
+  onWearChange: (value: 'all' | ItemWear) => void;
+  edition: 'all' | ItemEdition;
+  onEditionChange: (value: 'all' | ItemEdition) => void;
+  phase: 'all' | MarketPhase;
+  onPhaseChange: (value: 'all' | MarketPhase) => void;
+  cheapestOn: 'all' | MarketId;
+  onCheapestOnChange: (value: 'all' | MarketId) => void;
+  collection: string;
+  onCollectionChange: (value: string) => void;
+}
+
+export const ItemFilterSelects = ({
+  wear,
+  onWearChange,
+  edition,
+  onEditionChange,
+  phase,
+  onPhaseChange,
+  cheapestOn,
+  onCheapestOnChange,
+  collection,
+  onCollectionChange,
+}: ItemFilterSelectsProps) => {
+  const facets = useItemFacets();
+  const collectionOptions = [
+    { value: '', label: 'Любая коллекция' },
+    ...(facets.data?.collections.map((entry) => ({ value: entry.name, label: entry.name })) ?? []),
+  ];
+
+  return (
+    <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-5">
+      <Select
+        value={cheapestOn}
+        onChange={onCheapestOnChange}
+        options={MARKET_FILTERS}
+        aria-label="Где сейчас дешевле"
+      />
+      <Select value={wear} onChange={onWearChange} options={WEAR_FILTERS} aria-label="Износ" />
+      <Select
+        value={edition}
+        onChange={onEditionChange}
+        options={EDITION_FILTERS}
+        aria-label="Версия предмета"
+      />
+      <Select
+        value={phase}
+        onChange={onPhaseChange}
+        options={PHASE_FILTERS}
+        aria-label="Фаза Doppler"
+      />
+      <Select
+        value={collection}
+        onChange={onCollectionChange}
+        options={collectionOptions}
+        aria-label="Коллекция"
+      />
+    </div>
+  );
+};

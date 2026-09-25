@@ -21,6 +21,7 @@ const item = (whiteMarket: MarketQuote, dmarket: MarketQuote): Item => ({
   category: 'heavy',
   whiteMarket,
   dmarket,
+  csfloat: null,
   gap: {
     cheaper: whiteMarket.price! < dmarket.price! ? 'whiteMarket' : 'dmarket',
     amount: Math.abs(whiteMarket.price! - dmarket.price!),

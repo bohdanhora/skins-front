@@ -11,9 +11,7 @@ import { ItemImage } from './item-image';
 
 interface ListingListProps {
   data: Listings;
-  /** Inside the item card the name is already known, so it is not repeated. */
   compact?: boolean;
-  /** Show the overpay for the searched stickers: the sticker search ranks by it. */
   deal?: boolean;
 }
 
@@ -110,7 +108,6 @@ const ListingRow = ({
                 className="bg-surface-muted flex size-8 items-center justify-center rounded-lg"
               >
                 {sticker.image ? (
-                  // eslint-disable-next-line @next/next/no-img-element
                   <img src={sticker.image} alt={sticker.name} className="size-7 object-contain" />
                 ) : (
                   <span className="text-[0.625rem]">?</span>
@@ -144,7 +141,6 @@ const ListingRow = ({
   </li>
 );
 
-/** Up to this share of the sticker price the sticker is basically a bonus. */
 const GOOD_SHARE = 0.15;
 
 const DealBadge = ({ listing }: { listing: Listing }) => {

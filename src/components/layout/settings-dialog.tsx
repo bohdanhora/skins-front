@@ -22,19 +22,28 @@ interface SettingsDialogProps {
 const FEE_HINTS: Record<MarketId, string> = {
   whiteMarket: 'Обычно 5%',
   dmarket: 'От 2% до 10%, зависит от предмета',
+  csfloat: 'Обычно 2%',
 };
 
 const MAX_FEE = 50;
 
 export const SettingsDialog = ({ open, onOpenChange }: SettingsDialogProps) => {
   const [fees, setFees] = useFeesSetting();
-  const [draft, setDraft] = useState<Record<MarketId, string>>({ whiteMarket: '', dmarket: '' });
+  const [draft, setDraft] = useState<Record<MarketId, string>>({
+    whiteMarket: '',
+    dmarket: '',
+    csfloat: '',
+  });
   const { theme = 'system', setTheme } = useTheme();
   const status = useStatus();
 
   useEffect(() => {
     if (open) {
-      setDraft({ whiteMarket: String(fees.whiteMarket), dmarket: String(fees.dmarket) });
+      setDraft({
+        whiteMarket: String(fees.whiteMarket),
+        dmarket: String(fees.dmarket),
+        csfloat: String(fees.csfloat),
+      });
     }
   }, [open, fees]);
 
@@ -64,7 +73,7 @@ export const SettingsDialog = ({ open, onOpenChange }: SettingsDialogProps) => {
               Нужна, чтобы честно считать прибыль от перепродажи.
             </p>
           </div>
-          <div className="grid gap-3 sm:grid-cols-2">
+          <div className="grid gap-3 sm:grid-cols-3">
             {MARKET_ORDER.map((market) => (
               <label key={market} className="border-border block rounded-2xl border p-3.5">
                 <span className="flex items-center gap-2 text-sm font-medium">
@@ -93,7 +102,8 @@ export const SettingsDialog = ({ open, onOpenChange }: SettingsDialogProps) => {
             ))}
           </div>
           {fees.whiteMarket !== DEFAULT_FEES.whiteMarket ||
-          fees.dmarket !== DEFAULT_FEES.dmarket ? (
+          fees.dmarket !== DEFAULT_FEES.dmarket ||
+          fees.csfloat !== DEFAULT_FEES.csfloat ? (
             <Button variant="ghost" size="sm" onClick={() => setFees(DEFAULT_FEES)}>
               Вернуть как было
             </Button>

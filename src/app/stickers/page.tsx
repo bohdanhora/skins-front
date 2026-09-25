@@ -119,7 +119,10 @@ const SkinsWithStickers = () => {
   const itemText = useDebouncedValue(item).trim();
 
   const keysReady =
-    !!status.data && (status.data.whiteMarket.keysConfigured || status.data.dmarket.keysConfigured);
+    !!status.data &&
+    (status.data.whiteMarket.keysConfigured ||
+      status.data.dmarket.keysConfigured ||
+      status.data.csfloat.keysConfigured);
 
   const skins = useSkinsWithStickers(
     {
@@ -137,7 +140,7 @@ const SkinsWithStickers = () => {
       <EmptyState
         icon={<KeyRound className="size-6" aria-hidden />}
         title="Нужны ключи площадок"
-        description="Искать скины с конкретными наклейками площадки разрешают только через личный ключ. Как только ключ white.market или DMarket будет подключён к серверу, поиск заработает здесь."
+        description="Искать скины с конкретными наклейками площадки разрешают только через личный ключ. Как только ключ одной из площадок будет подключён к серверу, поиск заработает здесь."
       />
     );
   }
@@ -171,7 +174,7 @@ const SkinsWithStickers = () => {
         <EmptyState
           icon={<Sticker className="size-6" aria-hidden />}
           title="Выбери наклейку"
-          description="Покажем скины с ней на обеих площадках. Сверху будут те, где за наклейку почти не доплачивают. Если выбрать несколько, найдём скины, где есть все сразу."
+          description="Покажем скины с ней на всех площадках. Сверху будут те, где за наклейку почти не доплачивают. Если выбрать несколько, найдём скины, где есть все сразу."
         />
       ) : skins.isPending ? (
         <Skeleton className="h-64 rounded-3xl" />

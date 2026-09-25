@@ -78,13 +78,15 @@ export const StickerPicker = ({ selected, onChange, max }: StickerPickerProps) =
                 >
                   <span className="bg-surface-muted flex size-10 shrink-0 items-center justify-center rounded-xl">
                     {item.image ? (
-                      // eslint-disable-next-line @next/next/no-img-element
                       <img src={item.image} alt="" className="size-9 object-contain" />
                     ) : null}
                   </span>
                   <span className="min-w-0 flex-1 truncate text-sm">{stickerLabel(item.name)}</span>
                   <span className="text-foreground-muted numeric text-xs">
-                    от {formatUsd(minPrice(item.whiteMarket?.price, item.dmarket?.price))}
+                    от{' '}
+                    {formatUsd(
+                      minPrice(item.whiteMarket?.price, item.dmarket?.price, item.csfloat?.price),
+                    )}
                   </span>
                   <Plus className="text-foreground-subtle size-4" aria-hidden />
                 </button>

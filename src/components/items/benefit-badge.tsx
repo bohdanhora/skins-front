@@ -13,21 +13,26 @@ interface BenefitBadgeProps {
 const tone = (amount: number): string =>
   amount > 0 ? 'bg-gain-soft text-gain' : 'bg-loss-soft text-loss';
 
-/** One line that answers "what do I get here" for the current mode. */
 export const BenefitBadge = ({ item, mode }: BenefitBadgeProps) => {
   if (mode === 'top' && item.top) {
     const { top } = item;
 
     return (
       <div className="space-y-1.5">
-        <Pill className="bg-gain-soft text-gain">
-          <TrendingDown className="size-3.5" aria-hidden />
-          Ниже рынка на {formatPercent(top.percent)}
-          <span className="opacity-70">· {formatUsd(top.discount)}</span>
-        </Pill>
+        <div className="flex flex-wrap gap-1.5">
+          <Pill className="bg-gain-soft text-gain">
+            <TrendingDown className="size-3.5" aria-hidden />
+            Ниже рынка на {formatPercent(top.percent)}
+            <span className="opacity-70">· {formatUsd(top.discount)}</span>
+          </Pill>
+          {item.dealScore ? (
+            <Pill className="bg-accent-soft text-accent">Сигнал {item.dealScore.score}/100</Pill>
+          ) : null}
+        </div>
         <p className="text-foreground-muted text-xs">
           Обычно от {formatUsd(top.reference)}
           {item.dmarket?.bid ? `, скупают за ${formatUsd(item.dmarket.bid)}` : ''}
+          {item.sales?.eightWeekSales ? `, ${item.sales.eightWeekSales} продаж за 8 недель` : ''}
         </p>
       </div>
     );

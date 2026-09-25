@@ -7,7 +7,6 @@ import { cn } from '@/lib/utils/cn';
 export const offersLabel = (count: number): string =>
   `${count} ${plural(count, ['лот', 'лота', 'лотов'])}`;
 
-/** Both market prices one under the other, the cheaper one highlighted. */
 export const PriceRows = ({ item }: { item: Item }) => (
   <div className="space-y-1">
     {MARKET_ORDER.map((market) => (

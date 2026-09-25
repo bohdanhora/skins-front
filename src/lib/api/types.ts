@@ -1,4 +1,10 @@
-export type MarketId = 'whiteMarket' | 'dmarket';
+export type MarketId = 'whiteMarket' | 'dmarket' | 'csfloat';
+export type TradingMarketId = Exclude<MarketId, 'csfloat'>;
+export type ListingMarketId = MarketId;
+export type MarketPhase =
+  'phase-1' | 'phase-2' | 'phase-3' | 'phase-4' | 'ruby' | 'sapphire' | 'emerald' | 'black-pearl';
+export type ItemWear = 'FN' | 'MW' | 'FT' | 'WW' | 'BS';
+export type ItemEdition = 'normal' | 'stattrak' | 'souvenir';
 
 export type ItemCategory =
   | 'knife'
@@ -17,9 +23,16 @@ export type ItemCategory =
 export type DealMode = 'all' | 'gap' | 'flip' | 'instant' | 'top';
 
 export type ItemSort =
-  'benefit' | 'benefitAmount' | 'bidCover' | 'popular' | 'priceAsc' | 'priceDesc' | 'name';
+  | 'benefit'
+  | 'benefitAmount'
+  | 'bidCover'
+  | 'popular'
+  | 'priceAsc'
+  | 'priceDesc'
+  | 'name'
+  | 'sales8w'
+  | 'score';
 
-/** Money is always in US cents. */
 export interface MarketQuote {
   price: number | null;
   listings: number;
@@ -43,22 +56,21 @@ export interface Flip {
   percent: number;
 }
 
-/** Recent DMarket sales, summarized. */
 export interface SalesStats {
-  /** Low end of recent sale prices, the "normal" price. */
   floor: number;
   lastDay: string;
   lastAverage: number;
   weekSales: number;
+  eightWeekSales?: number;
+  eightWeekAverage?: number;
+  trendPercent?: number | null;
 }
 
 export interface TopOffer {
   price: number;
-  /** Sales floor or the other market price, whichever is lower. */
   reference: number;
   discount: number;
   percent: number;
-  /** Best buy order as % of the price. */
   bidCover: number | null;
 }
 
@@ -68,8 +80,12 @@ export interface Item {
   rarity: string | null;
   rarityColor: string | null;
   category: ItemCategory;
+  phase?: MarketPhase | null;
+  collections?: { name: string; image: string | null }[];
+  dealScore?: { score: number; confidence: 'high' | 'medium' | 'low' } | null;
   whiteMarket: MarketQuote | null;
   dmarket: MarketQuote | null;
+  csfloat: MarketQuote | null;
   gap: PriceGap | null;
   flip: Flip | null;
   instant: Flip | null;
@@ -83,9 +99,18 @@ export interface ItemsPage {
   updatedAt: string | null;
 }
 
+export interface ItemFacets {
+  collections: { name: string; image: string | null }[];
+}
+
 export interface ItemsQuery {
   q?: string;
   category?: ItemCategory;
+  wear?: ItemWear;
+  edition?: ItemEdition;
+  phase?: MarketPhase;
+  collection?: string;
+  cheapestOn?: MarketId;
   mode?: DealMode;
   sort?: ItemSort;
   minPrice?: number;
@@ -93,9 +118,12 @@ export interface ItemsQuery {
   minListings?: number;
   onlyProfitable?: boolean;
   minWeekSales?: number;
+  minEightWeekSales?: number;
+  minBenefitPercent?: number;
   minBidCover?: number;
   feeWhiteMarket?: number;
   feeDmarket?: number;
+  feeCsfloat?: number;
   names?: string[];
   limit?: number;
   offset?: number;
@@ -123,13 +151,9 @@ export interface Listing {
   float: string | null;
   stickers: ListingSticker[];
   stickersValue: number;
-  /** Cheapest listing of the same item. */
   basePrice: number | null;
-  /** Paid above the base price for this exact listing. */
   overpay: number | null;
-  /** Price of the searched stickers on this listing. */
   wantedValue: number;
-  /** Overpay as a share of the searched stickers price, lower is better. */
   overpayShare: number | null;
   url: string;
 }
@@ -149,6 +173,7 @@ export interface MarketStatus {
 export interface Status {
   whiteMarket: MarketStatus;
   dmarket: MarketStatus;
+  csfloat: MarketStatus;
   refreshing: boolean;
   comparedItems: number;
   catalogItems: number;
@@ -168,7 +193,7 @@ export interface SalesChart {
 }
 
 export interface FloatListing {
-  market: MarketId;
+  market: ListingMarketId;
   price: number;
   float: number | null;
   paintSeed: number | null;
@@ -191,12 +216,26 @@ export interface FloatSource {
 export interface FloatSearch {
   dmarket: FloatSource;
   whiteMarket: FloatSource;
+  csfloat: FloatSource;
+  steam: {
+    status: SourceStatus;
+    listings: SteamFloatListing[];
+    total: number;
+  };
   whiteMarketCheapest: FloatListing | null;
   orders: FloatBuyOrder[];
   cheapestAnyFloat: number | null;
 }
 
-/** A listing that already fits a DMarket buy order paying more than it costs. */
+export interface SteamFloatListing {
+  id: string;
+  priceLabel: string;
+  float: number | null;
+  paintSeed: number | null;
+  phase: MarketPhase | null;
+  url: string;
+}
+
 export interface Snipe {
   name: string;
   image: string | null;
@@ -213,7 +252,6 @@ export interface Snipe {
   orderFloatRange: [number, number] | null;
   orderPaintSeed: number | null;
   orderPhase: string | null;
-  /** After the DMarket seller fee. */
   profit: number;
   percent: number;
   checkedAt: string;
@@ -235,6 +273,9 @@ export interface SnipesQuery {
   source?: 'all' | MarketId;
   minPrice?: number;
   maxPrice?: number;
+  minFloat?: number;
+  maxFloat?: number;
+  phase?: MarketPhase;
   minProfit?: number;
   specialOnly?: boolean;
   sort?: SnipeSort;

@@ -3,7 +3,6 @@ import { formatUsd } from '@/lib/format/money';
 import { MARKETS } from '@/lib/markets';
 
 const THIN_MARKET = 3;
-/** Listings this far above what buyers actually pay rarely sell at that price. */
 const OVERPRICED_RATIO = 1.5;
 const RARE_SALES = 5;
 const SUSPICIOUS_DISCOUNT = 35;
@@ -13,7 +12,6 @@ export interface DealWarning {
   long: string;
 }
 
-/** Explains why a deal that looks great on paper may not work out. */
 export const dealWarning = (item: Item, mode: DealMode): DealWarning | null => {
   if (mode === 'top') {
     if ((item.sales?.weekSales ?? 0) < RARE_SALES) {
@@ -44,17 +42,25 @@ export const dealWarning = (item: Item, mode: DealMode): DealWarning | null => {
     return null;
   }
 
-  const pricier = item.gap.cheaper === 'whiteMarket' ? 'dmarket' : 'whiteMarket';
-  const quote = item[pricier];
+  const markets = (['whiteMarket', 'dmarket', 'csfloat'] as const)
+    .map((market) => ({ market, quote: item[market] }))
+    .filter((entry) => entry.quote?.price !== null && (entry.quote?.listings ?? 0) > 0)
+    .sort((left, right) => right.quote!.price! - left.quote!.price!);
+  const pricier = markets[0]?.market;
+  const quote = pricier ? item[pricier] : null;
 
-  if (quote?.bid && quote.price !== null && quote.price > quote.bid * OVERPRICED_RATIO) {
+  if (pricier && quote?.bid && quote.price !== null && quote.price > quote.bid * OVERPRICED_RATIO) {
     return {
       short: 'цена под вопросом',
       long: `На ${MARKETS[pricier].name} лоты стоят ${formatUsd(quote.price)}, но скупают всего за ${formatUsd(quote.bid)}. По такой цене предмет может долго не продаваться.`,
     };
   }
 
-  if (Math.min(item.whiteMarket?.listings ?? 0, item.dmarket?.listings ?? 0) < THIN_MARKET) {
+  const comparedDepth = markets
+    .filter((entry) => entry.market === item.gap?.cheaper || entry.market === pricier)
+    .map((entry) => entry.quote?.listings ?? 0);
+
+  if (comparedDepth.length < 2 || Math.min(...comparedDepth) < THIN_MARKET) {
     return {
       short: 'мало лотов',
       long: 'Предложений совсем мало, цена может быстро уйти.',

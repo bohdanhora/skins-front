@@ -13,6 +13,7 @@ import { apiGet } from './client';
 import type {
   FloatSearch,
   Item,
+  ItemFacets,
   ItemsPage,
   ItemsQuery,
   Listings,
@@ -33,14 +34,22 @@ export const useStatus = () =>
     refetchInterval: STATUS_POLL_MS,
   });
 
-/** Paged item list. Fees from settings are always applied, so profit numbers match the user. */
 export const useItems = (query: ItemsQuery, options: { enabled?: boolean } = {}) => {
   const fees = useFees();
-  const pricesAt = useStatus().data?.dmarket.updatedAt ?? null;
-  const fullQuery = { ...query, feeWhiteMarket: fees.whiteMarket, feeDmarket: fees.dmarket };
+  const status = useStatus().data;
+  const pricesAt = [
+    status?.whiteMarket.updatedAt,
+    status?.dmarket.updatedAt,
+    status?.csfloat.updatedAt,
+  ];
+  const fullQuery = {
+    ...query,
+    feeWhiteMarket: fees.whiteMarket,
+    feeDmarket: fees.dmarket,
+    feeCsfloat: fees.csfloat,
+  };
 
   return useInfiniteQuery<ItemsPage, Error, InfiniteData<ItemsPage>, unknown[], number>({
-    // New prices on the server mean a new key, so lists refresh by themselves.
     queryKey: ['items', fullQuery, pricesAt],
     queryFn: ({ pageParam, signal }) =>
       apiGet<ItemsPage>(
@@ -67,12 +76,24 @@ export const useItem = (name: string | null) => {
     queryFn: ({ signal }) =>
       apiGet<Item>(
         '/items/one',
-        { name: name ?? '', feeWhiteMarket: fees.whiteMarket, feeDmarket: fees.dmarket },
+        {
+          name: name ?? '',
+          feeWhiteMarket: fees.whiteMarket,
+          feeDmarket: fees.dmarket,
+          feeCsfloat: fees.csfloat,
+        },
         signal,
       ),
     enabled: name !== null,
   });
 };
+
+export const useItemFacets = () =>
+  useQuery({
+    queryKey: ['item-facets'],
+    queryFn: ({ signal }) => apiGet<ItemFacets>('/items/facets', undefined, signal),
+    staleTime: 60 * 60_000,
+  });
 
 export const useSalesChart = (name: string | null) =>
   useQuery({
@@ -108,7 +129,6 @@ export type StickerSkinsSort = 'deal' | 'overpay' | 'price';
 
 export interface StickerSkinsQuery {
   stickers: string[];
-  /** Exact item name or any part of it. */
   item?: string;
   sort: StickerSkinsSort;
   minPrice?: number;
@@ -134,7 +154,6 @@ export const useSkinsWithStickers = (query: StickerSkinsQuery, enabled: boolean)
     placeholderData: keepPreviousData,
   });
 
-/** Float finds refresh every minute: the background scan keeps adding and dropping them. */
 export const useSnipes = (query: SnipesQuery) => {
   const fees = useFees();
   const fullQuery = { ...query, feeDmarket: fees.dmarket };

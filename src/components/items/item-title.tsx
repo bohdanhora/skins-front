@@ -30,6 +30,7 @@ export const ItemTitle = ({ name, size = 'md' }: ItemTitleProps) => {
             {parsed.wear}
           </Tag>
         ) : null}
+        {parsed.phase ? <Tag className="bg-accent-soft text-accent">{parsed.phase}</Tag> : null}
         {secondary ? (
           <span className="text-foreground-muted truncate text-xs">{secondary}</span>
         ) : null}
