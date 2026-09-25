@@ -1,0 +1,322 @@
+'use client';
+
+import {
+  ArrowRight,
+  ExternalLink,
+  Gauge,
+  Info,
+  TrendingDown,
+  TriangleAlert,
+  Zap,
+} from 'lucide-react';
+import type { Route } from 'next';
+import Link from 'next/link';
+import type { ReactNode } from 'react';
+
+import { Button } from '@/components/ui/button';
+import { Dialog } from '@/components/ui/dialog';
+import { Skeleton } from '@/components/ui/skeleton';
+import { useItem, useItemListings, useStatus } from '@/lib/api/queries';
+import type { Flip, Item, MarketId } from '@/lib/api/types';
+import { dealWarning } from '@/lib/deal-warning';
+import { parseItemName } from '@/lib/format/item-name';
+import { formatPercent, formatSignedUsd, formatUsd } from '@/lib/format/money';
+import { MARKETS, MARKET_ORDER } from '@/lib/markets';
+import { useFees } from '@/lib/storage/settings';
+import { cn } from '@/lib/utils/cn';
+
+import { ListingList } from './listing-list';
+import { FavoriteButton } from './favorite-button';
+import { ItemImage } from './item-image';
+import { ItemTitle } from './item-title';
+import { offersLabel } from './price-rows';
+import { SalesChart } from './sales-chart';
+
+const cheapestListing = (item: Item): number | null => {
+  const prices = MARKET_ORDER.map((market) => item[market])
+    .filter((quote) => quote && quote.listings > 0 && quote.price !== null)
+    .map((quote) => quote!.price!);
+
+  return prices.length > 0 ? Math.min(...prices) : null;
+};
+
+interface ItemDialogProps {
+  name: string | null;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}
+
+export const ItemDialog = ({ name, open, onOpenChange }: ItemDialogProps) => {
+  const item = useItem(open ? name : null);
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange} title={name ?? 'Предмет'} hideHeader>
+      {item.data ? (
+        <ItemDetails item={item.data} onNavigate={() => onOpenChange(false)} />
+      ) : item.isError ? (
+        <p className="text-foreground-muted py-10 text-center text-sm">
+          Этот предмет сейчас не продаётся ни на одной площадке.
+        </p>
+      ) : (
+        <DetailsSkeleton />
+      )}
+    </Dialog>
+  );
+};
+
+const ItemDetails = ({ item, onNavigate }: { item: Item; onNavigate: () => void }) => {
+  const status = useStatus();
+  const keysReady =
+    !!status.data && (status.data.whiteMarket.keysConfigured || status.data.dmarket.keysConfigured);
+
+  return (
+    <div className="space-y-6 pt-3">
+      <div className="flex items-center gap-4 pr-8">
+        <ItemImage
+          src={item.image}
+          alt={item.name}
+          rarityColor={item.rarityColor}
+          className="size-28 shrink-0 sm:size-32"
+          imageClassName="p-2"
+        />
+        <div className="min-w-0 space-y-2">
+          <ItemTitle name={item.name} size="lg" />
+          <div className="flex items-center gap-2">
+            {item.rarity ? (
+              <span className="text-foreground-muted flex items-center gap-1.5 text-xs">
+                <span
+                  className="size-2 rounded-full"
+                  style={{ backgroundColor: item.rarityColor ?? undefined }}
+                  aria-hidden
+                />
+                {item.rarity}
+              </span>
+            ) : null}
+            <FavoriteButton name={item.name} className="bg-surface-muted" />
+          </div>
+        </div>
+      </div>
+
+      <Verdict item={item} />
+
+      <div className="grid grid-cols-2 gap-3">
+        {MARKET_ORDER.map((market) => (
+          <MarketPanel key={market} item={item} market={market} />
+        ))}
+      </div>
+
+      <ResaleSection item={item} />
+
+      <section className="space-y-3">
+        <h3 className="text-sm font-semibold">Продажи на DMarket</h3>
+        {item.top ? (
+          <div className="bg-gain-soft text-gain flex items-center gap-2 rounded-2xl px-4 py-3 text-sm font-medium">
+            <TrendingDown className="size-4 shrink-0" aria-hidden />
+            Сейчас на {formatPercent(item.top.percent)} ниже рынка
+            {item.dmarket?.bid
+              ? item.dmarket.bid >= item.top.price
+                ? `, а скупают даже дороже: ${formatUsd(item.dmarket.bid)}`
+                : `, скупают за ${formatUsd(item.dmarket.bid)}`
+              : ''}
+          </div>
+        ) : null}
+        <SalesChart name={item.name} currentPrice={item.top?.price ?? cheapestListing(item)} />
+      </section>
+
+      {parseItemName(item.name).wear ? (
+        <Button asChild variant="secondary" className="w-full">
+          <Link href={`/float?name=${encodeURIComponent(item.name)}` as Route} onClick={onNavigate}>
+            <Gauge className="size-4" aria-hidden />
+            Искать этот скин по флоату
+          </Link>
+        </Button>
+      ) : null}
+
+      {keysReady ? (
+        <section className="space-y-3">
+          <h3 className="text-sm font-semibold">Самые дешёвые лоты</h3>
+          <ItemListings name={item.name} />
+        </section>
+      ) : null}
+    </div>
+  );
+};
+
+const Verdict = ({ item }: { item: Item }) => {
+  if (!item.gap) {
+    return null;
+  }
+
+  const cheaper = MARKETS[item.gap.cheaper];
+  const warning = dealWarning(item, 'gap');
+
+  return (
+    <div className="space-y-2">
+      <div className="bg-gain-soft text-gain rounded-2xl px-4 py-3 text-[0.9375rem] font-medium">
+        На {cheaper.name} дешевле на {formatUsd(item.gap.amount)} ({formatPercent(item.gap.percent)}
+        )
+      </div>
+      {warning ? (
+        <div className="bg-warning-soft text-warning flex gap-2.5 rounded-2xl px-4 py-3 text-sm leading-relaxed">
+          <TriangleAlert className="mt-0.5 size-4 shrink-0" aria-hidden />
+          <p>{warning.long}</p>
+        </div>
+      ) : null}
+    </div>
+  );
+};
+
+const MarketPanel = ({ item, market }: { item: Item; market: MarketId }) => {
+  const quote = item[market];
+  const meta = MARKETS[market];
+  const listed = !!quote && quote.listings > 0 && quote.price !== null;
+  const cheaper = item.gap?.cheaper === market;
+
+  return (
+    <div
+      className={cn(
+        'flex flex-col rounded-2xl border p-4',
+        cheaper ? 'border-gain/40 bg-gain-soft/40' : 'border-border',
+      )}
+    >
+      <p className="flex items-center gap-2 text-sm font-medium">
+        <span className={cn('size-2 rounded-full', meta.dot)} aria-hidden />
+        {meta.name}
+      </p>
+      <p className="numeric mt-3 text-2xl font-semibold tracking-tight">
+        {listed ? formatUsd(quote.price) : '-'}
+      </p>
+      <p className="text-foreground-muted mt-0.5 text-xs">
+        {listed ? offersLabel(quote.listings) : 'сейчас нет в продаже'}
+      </p>
+      {quote?.bid ? (
+        <p className="text-foreground-muted mt-2 text-xs">
+          Скупают за{' '}
+          <span className="text-foreground numeric font-medium">{formatUsd(quote.bid)}</span>
+        </p>
+      ) : null}
+      <div className="mt-auto pt-4">
+        <Button asChild variant={market} size="sm" className="w-full">
+          <a
+            href={
+              quote?.url ??
+              (market === 'whiteMarket' ? 'https://white.market' : 'https://dmarket.com')
+            }
+            target="_blank"
+            rel="noreferrer"
+          >
+            Открыть
+            <ExternalLink className="size-3.5" aria-hidden />
+          </a>
+        </Button>
+      </div>
+    </div>
+  );
+};
+
+const ResaleSection = ({ item }: { item: Item }) => {
+  const fees = useFees();
+
+  if (!item.flip && !item.instant) {
+    return null;
+  }
+
+  return (
+    <section className="space-y-3">
+      <h3 className="text-sm font-semibold">Если перепродать</h3>
+      <div className="divide-border border-border divide-y rounded-2xl border">
+        {item.flip ? (
+          <ResaleRow
+            icon={<ArrowRight className="size-4" aria-hidden />}
+            title={`Купить на ${MARKETS[item.flip.buyOn].short}, выставить на ${MARKETS[item.flip.sellOn].short}`}
+            note={`по ${formatUsd(item.flip.sellPrice)}, чуть дешевле всех`}
+            flip={item.flip}
+          />
+        ) : null}
+        {item.instant ? (
+          <ResaleRow
+            icon={<Zap className="size-4" aria-hidden />}
+            title="Купить на White, сразу продать по заявке DMarket"
+            note={`заявка ${formatUsd(item.instant.sellPrice)}, ждать не нужно`}
+            flip={item.instant}
+          />
+        ) : null}
+      </div>
+      <p className="text-foreground-subtle text-xs">
+        Уже вычтена комиссия продавца: white.market {fees.whiteMarket}%, DMarket {fees.dmarket}%.
+        Поменять можно в настройках.
+      </p>
+    </section>
+  );
+};
+
+const ResaleRow = ({
+  icon,
+  title,
+  note,
+  flip,
+}: {
+  icon: ReactNode;
+  title: string;
+  note: string;
+  flip: Flip;
+}) => (
+  <div className="flex items-center gap-3 px-4 py-3">
+    <span className="bg-surface-muted text-foreground-muted flex size-9 shrink-0 items-center justify-center rounded-xl">
+      {icon}
+    </span>
+    <div className="min-w-0 flex-1">
+      <p className="text-sm font-medium">{title}</p>
+      <p className="text-foreground-muted text-xs">{note}</p>
+    </div>
+    <div className="text-right">
+      <p
+        className={cn(
+          'numeric text-[0.9375rem] font-semibold',
+          flip.profit > 0 ? 'text-gain' : 'text-loss',
+        )}
+      >
+        {formatSignedUsd(flip.profit)}
+      </p>
+      <p className="text-foreground-subtle numeric text-xs">{formatPercent(flip.percent, true)}</p>
+    </div>
+  </div>
+);
+
+const ItemListings = ({ name }: { name: string }) => {
+  const listings = useItemListings(name, true);
+
+  if (listings.isPending) {
+    return <Skeleton className="h-32 rounded-2xl" />;
+  }
+
+  if (listings.isError) {
+    return <Hint>Не удалось загрузить лоты. Попробуй открыть предмет ещё раз.</Hint>;
+  }
+
+  return <ListingList data={listings.data} compact />;
+};
+
+export const Hint = ({ children }: { children: ReactNode }) => (
+  <div className="bg-surface-muted text-foreground-muted flex gap-3 rounded-2xl px-4 py-3 text-sm leading-relaxed">
+    <Info className="mt-0.5 size-4 shrink-0" aria-hidden />
+    <p>{children}</p>
+  </div>
+);
+
+const DetailsSkeleton = () => (
+  <div className="space-y-6 pt-3">
+    <div className="flex items-center gap-4">
+      <Skeleton className="size-28 rounded-2xl" />
+      <div className="flex-1 space-y-2">
+        <Skeleton className="h-4 w-24" />
+        <Skeleton className="h-6 w-48" />
+      </div>
+    </div>
+    <Skeleton className="h-12 rounded-2xl" />
+    <div className="grid grid-cols-2 gap-3">
+      <Skeleton className="h-40 rounded-2xl" />
+      <Skeleton className="h-40 rounded-2xl" />
+    </div>
+  </div>
+);
