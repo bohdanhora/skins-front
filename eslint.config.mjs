@@ -10,6 +10,7 @@ const config = [
   {
     ignores: [
       '.next',
+      '.next-dev',
       'node_modules',
       'coverage',
       'next-env.d.ts',
@@ -22,6 +23,7 @@ const config = [
       '@typescript-eslint/no-explicit-any': 'error',
       '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
       '@typescript-eslint/consistent-type-imports': ['error', { fixStyle: 'inline-type-imports' }],
+      '@next/next/no-img-element': 'off',
       'no-console': 'error',
       eqeqeq: ['error', 'smart'],
     },
