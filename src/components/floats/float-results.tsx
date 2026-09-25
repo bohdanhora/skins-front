@@ -6,7 +6,13 @@ import { useState } from 'react';
 import { Segmented } from '@/components/ui/segmented';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useFloatSearch } from '@/lib/api/queries';
-import type { FloatBuyOrder, FloatListing, FloatSearch } from '@/lib/api/types';
+import type {
+  FloatBuyOrder,
+  FloatListing,
+  FloatSearch,
+  ListingMarketId,
+  SteamFloatListing,
+} from '@/lib/api/types';
 import { formatFloat, formatRange, type FloatRange } from '@/lib/format/float';
 import { formatSignedUsd, formatUsd } from '@/lib/format/money';
 import { plural } from '@/lib/format/time';
@@ -16,17 +22,18 @@ import { cn } from '@/lib/utils/cn';
 import { FloatBar } from './float-bar';
 
 type Order = 'price' | 'float';
+type Source = 'all' | ListingMarketId;
 
 interface FloatResultsProps {
   name: string;
   range: Partial<{ from: number; to: number }>;
-  /** Exterior range, so floats on the bar are spread across the part that matters. */
   zoom: FloatRange | null;
 }
 
 export const FloatResults = ({ name, range, zoom }: FloatResultsProps) => {
   const search = useFloatSearch({ name, floatFrom: range.from, floatTo: range.to });
   const [order, setOrder] = useState<Order>('price');
+  const [source, setSource] = useState<Source>('all');
 
   if (search.isPending) {
     return <Skeleton className="h-72 rounded-3xl" />;
@@ -41,12 +48,17 @@ export const FloatResults = ({ name, range, zoom }: FloatResultsProps) => {
   }
 
   const data = search.data;
-  const listings = [...data.dmarket.listings, ...data.whiteMarket.listings].sort((left, right) =>
-    order === 'price' ? left.price - right.price : (left.float ?? 1) - (right.float ?? 1),
-  );
-  const best = [...data.dmarket.listings, ...data.whiteMarket.listings].sort(
-    (left, right) => left.price - right.price,
-  )[0];
+  const allListings = [
+    ...data.dmarket.listings,
+    ...data.whiteMarket.listings,
+    ...data.csfloat.listings,
+  ];
+  const listings = allListings
+    .filter((listing) => source === 'all' || listing.market === source)
+    .sort((left, right) =>
+      order === 'price' ? left.price - right.price : (left.float ?? 1) - (right.float ?? 1),
+    );
+  const best = [...listings].sort((left, right) => left.price - right.price)[0];
 
   return (
     <div className={cn('space-y-6', search.isFetching ? 'opacity-60 transition-opacity' : '')}>
@@ -58,24 +70,44 @@ export const FloatResults = ({ name, range, zoom }: FloatResultsProps) => {
           <h2 className="text-base font-semibold">
             Лоты в диапазоне{' '}
             <span className="text-foreground-muted font-normal">
-              {data.dmarket.total + data.whiteMarket.total}
+              {data.dmarket.total + data.whiteMarket.total + data.csfloat.total}
             </span>
           </h2>
-          <Segmented
-            label="Сортировка"
-            value={order}
-            onChange={setOrder}
-            options={[
-              { value: 'price', label: 'Дешевле' },
-              { value: 'float', label: 'Ниже флоат' },
-            ]}
-            className="w-auto"
-          />
+          <div className="flex flex-wrap gap-2">
+            <Segmented
+              label="Площадка"
+              value={source}
+              onChange={setSource}
+              options={[
+                { value: 'all', label: 'Все' },
+                { value: 'dmarket', label: 'DMarket' },
+                { value: 'whiteMarket', label: 'White' },
+                { value: 'csfloat', label: 'CSFloat' },
+              ]}
+              className="w-auto"
+            />
+            <Segmented
+              label="Сортировка"
+              value={order}
+              onChange={setOrder}
+              options={[
+                { value: 'price', label: 'Дешевле' },
+                { value: 'float', label: 'Ниже флоат' },
+              ]}
+              className="w-auto"
+            />
+          </div>
         </div>
         {data.whiteMarket.status === 'noKeys' ? (
           <p className="text-foreground-muted flex items-center gap-2 text-xs">
             <KeyRound className="size-3.5 shrink-0" aria-hidden />
-            Лоты white.market по флоату видны только с ключом, сейчас в списке DMarket.
+            Лоты white.market по флоату видны только с ключом, сейчас в списке DMarket и CSFloat.
+          </p>
+        ) : null}
+        {data.csfloat.status === 'noKeys' ? (
+          <p className="text-foreground-muted flex items-center gap-2 text-xs">
+            <KeyRound className="size-3.5 shrink-0" aria-hidden />
+            Добавь CSFLOAT_API_KEY на сервере, чтобы видеть лоты CSFloat с точным флоатом.
           </p>
         ) : null}
         {listings.length === 0 ? (
@@ -95,6 +127,8 @@ export const FloatResults = ({ name, range, zoom }: FloatResultsProps) => {
           </ul>
         )}
       </section>
+
+      <SteamListings data={data.steam} zoom={zoom} />
     </div>
   );
 };
@@ -172,6 +206,76 @@ const Tile = ({ label, children }: { label: string; children: React.ReactNode })
     <p className="text-foreground-muted mb-2 text-xs font-medium">{label}</p>
     {children}
   </div>
+);
+
+const SteamListings = ({ data, zoom }: { data: FloatSearch['steam']; zoom: FloatRange | null }) => {
+  if (data.status === 'error') {
+    return (
+      <p className="text-foreground-muted text-xs">
+        Steam временно не отдал лоты. Остальные площадки продолжают работать.
+      </p>
+    );
+  }
+
+  if (data.listings.length === 0) return null;
+
+  return (
+    <section className="space-y-3">
+      <div>
+        <h2 className="text-base font-semibold">
+          Steam Market <span className="text-foreground-muted font-normal">{data.total}</span>
+        </h2>
+        <p className="text-foreground-muted text-sm">
+          Цена показана в валюте Steam. Баланс Steam не выводится, поэтому эти лоты не смешиваются с
+          долларовым рейтингом других площадок.
+        </p>
+      </div>
+      <ul className="divide-border border-border bg-surface divide-y overflow-hidden rounded-2xl border">
+        {data.listings.map((listing) => (
+          <SteamListingRow key={listing.id} listing={listing} zoom={zoom} />
+        ))}
+      </ul>
+    </section>
+  );
+};
+
+const SteamListingRow = ({
+  listing,
+  zoom,
+}: {
+  listing: SteamFloatListing;
+  zoom: FloatRange | null;
+}) => (
+  <li>
+    <a
+      href={listing.url}
+      target="_blank"
+      rel="noreferrer"
+      className="hover:bg-surface-muted flex items-center gap-4 px-4 py-3 transition-colors"
+    >
+      <div className="w-28 shrink-0 space-y-1.5 sm:w-40">
+        <p className="numeric text-sm font-semibold">
+          {listing.float !== null ? formatFloat(listing.float, 6) : 'без флоата'}
+        </p>
+        {listing.float !== null ? (
+          <FloatBar value={listing.float} zoom={zoom ?? undefined} />
+        ) : null}
+      </div>
+      <div className="text-foreground-muted min-w-0 flex-1 text-xs">
+        <p className="flex items-center gap-1.5">
+          <span className="size-2 rounded-full bg-[#66c0f4]" aria-hidden />
+          Steam
+        </p>
+        <p className="mt-0.5">
+          {[listing.paintSeed !== null ? `паттерн ${listing.paintSeed}` : null, listing.phase]
+            .filter(Boolean)
+            .join(', ')}
+        </p>
+      </div>
+      <span className="numeric text-[0.9375rem] font-semibold">{listing.priceLabel}</span>
+      <ExternalLink className="text-foreground-subtle size-3.5 shrink-0" aria-hidden />
+    </a>
+  </li>
 );
 
 const BuyOrders = ({ orders, best }: { orders: FloatBuyOrder[]; best: FloatListing | null }) => {

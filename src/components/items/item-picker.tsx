@@ -14,7 +14,6 @@ const MIN_QUERY = 2;
 interface ItemPickerProps {
   onPick: (item: Item) => void;
   placeholder: string;
-  /** Only items whose name carries an exterior, i.e. skins with a float. */
   withFloatOnly?: boolean;
   autoFocus?: boolean;
 }
@@ -55,7 +54,6 @@ export const ItemPicker = ({ onPick, placeholder, withFloatOnly, autoFocus }: It
               >
                 <span className="bg-surface-muted flex size-10 shrink-0 items-center justify-center rounded-xl">
                   {item.image ? (
-                    // eslint-disable-next-line @next/next/no-img-element
                     <img src={item.image} alt="" className="size-9 object-contain" />
                   ) : null}
                 </span>
@@ -73,7 +71,7 @@ export const ItemPicker = ({ onPick, placeholder, withFloatOnly, autoFocus }: It
 };
 
 const cheapest = (item: Item): number | null => {
-  const prices = [item.whiteMarket, item.dmarket]
+  const prices = [item.whiteMarket, item.dmarket, item.csfloat]
     .filter((quote) => quote && quote.listings > 0 && quote.price !== null)
     .map((quote) => quote!.price!);
 

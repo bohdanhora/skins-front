@@ -15,7 +15,8 @@ import { Chip } from '@/components/ui/chip';
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useDebouncedValue } from '@/hooks/use-debounced-value';
-import { useItem } from '@/lib/api/queries';
+import { useItem, useItems } from '@/lib/api/queries';
+import type { Item } from '@/lib/api/types';
 import {
   WEAR_RANGES,
   floatPresets,
@@ -23,7 +24,8 @@ import {
   parseFloatInput,
   type FloatRange,
 } from '@/lib/format/float';
-import { parseItemName } from '@/lib/format/item-name';
+import { formatUsd } from '@/lib/format/money';
+import { parseItemName, type Wear } from '@/lib/format/item-name';
 
 export interface FloatSearchStart {
   name: string | null;
@@ -42,8 +44,17 @@ export const FloatSearchPanel = ({ initial }: { initial: FloatSearchStart }) => 
   const item = useItem(name);
   const wear = name ? parseItemName(name).wear : null;
   const presets = floatPresets(wear);
+  const parsed = name ? parseItemName(name) : null;
+  const variants = useItems(
+    {
+      q: parsed ? `${parsed.base} ${parsed.detail}` : undefined,
+      sort: 'priceAsc',
+      limit: 100,
+    },
+    { enabled: !!parsed?.detail },
+  );
+  const wearVariants = findWearVariants(variants.data?.pages[0]?.items ?? [], parsed);
 
-  // The address keeps the search, so it can be bookmarked or sent to a friend.
   useEffect(() => {
     const query = new URLSearchParams();
 
@@ -114,6 +125,30 @@ export const FloatSearchPanel = ({ initial }: { initial: FloatSearchStart }) => 
 
         {name ? (
           <>
+            {wearVariants.length > 1 ? (
+              <div className="no-scrollbar -mx-4 flex gap-2 overflow-x-auto px-4 sm:mx-0 sm:px-0">
+                {wearVariants.map(({ item: variant, wear: variantWear, price }) => (
+                  <button
+                    key={variant.name}
+                    type="button"
+                    onClick={() => {
+                      setName(variant.name);
+                      applyRange(null);
+                    }}
+                    className={
+                      variant.name === name
+                        ? 'border-accent bg-accent-soft text-accent min-w-24 rounded-xl border px-3 py-2 text-left'
+                        : 'border-border bg-surface hover:bg-surface-muted min-w-24 rounded-xl border px-3 py-2 text-left'
+                    }
+                  >
+                    <span className="block text-xs font-semibold">{variantWear}</span>
+                    <span className="numeric text-foreground mt-0.5 block text-sm font-semibold">
+                      {formatUsd(price)}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            ) : null}
             <div className="flex flex-wrap items-center gap-2">
               <span className="text-foreground-muted text-sm">Флоат</span>
               <Input
@@ -174,4 +209,52 @@ export const FloatSearchPanel = ({ initial }: { initial: FloatSearchStart }) => 
       )}
     </div>
   );
+};
+
+const WEAR_ORDER: Wear[] = ['FN', 'MW', 'FT', 'WW', 'BS'];
+
+const itemPrice = (item: Item): number | null => {
+  const prices = [item.whiteMarket, item.dmarket, item.csfloat]
+    .filter((quote) => quote && quote.listings > 0 && quote.price !== null)
+    .map((quote) => quote!.price!);
+
+  return prices.length > 0 ? Math.min(...prices) : null;
+};
+
+const findWearVariants = (
+  items: Item[],
+  selected: ReturnType<typeof parseItemName> | null,
+): { item: Item; wear: Wear; price: number }[] => {
+  if (!selected) return [];
+
+  const byWear = new Map<Wear, { item: Item; wear: Wear; price: number }>();
+
+  for (const item of items) {
+    const parsed = parseItemName(item.name);
+    const price = itemPrice(item);
+
+    if (
+      !parsed.wear ||
+      price === null ||
+      parsed.base !== selected.base ||
+      parsed.detail !== selected.detail ||
+      parsed.statTrak !== selected.statTrak ||
+      parsed.souvenir !== selected.souvenir ||
+      parsed.phase !== selected.phase
+    ) {
+      continue;
+    }
+
+    const current = byWear.get(parsed.wear);
+
+    if (!current || price < current.price) {
+      byWear.set(parsed.wear, { item, wear: parsed.wear, price });
+    }
+  }
+
+  return WEAR_ORDER.flatMap((variantWear) => {
+    const value = byWear.get(variantWear);
+
+    return value ? [value] : [];
+  });
 };

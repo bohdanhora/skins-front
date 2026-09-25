@@ -6,14 +6,16 @@ import { useState } from 'react';
 import { FilterBar, PriceRange, SearchField, Toggle } from '@/components/items/filters';
 import { EmptyState } from '@/components/states/empty-state';
 import { Button } from '@/components/ui/button';
-import { parseMoney } from '@/components/ui/input';
+import { Input, parseMoney } from '@/components/ui/input';
 import { Segmented } from '@/components/ui/segmented';
 import { Select } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useDebouncedValue } from '@/hooks/use-debounced-value';
 import { useSnipes } from '@/lib/api/queries';
-import type { Snipe, SnipeSort, SnipesQuery } from '@/lib/api/types';
+import type { MarketPhase, Snipe, SnipeSort, SnipesQuery } from '@/lib/api/types';
+import { parseFloatInput } from '@/lib/format/float';
 import { plural } from '@/lib/format/time';
+import { PHASE_FILTERS } from '@/lib/markets';
 
 import { SnipeCard } from './snipe-card';
 
@@ -28,6 +30,7 @@ const SOURCES: { value: NonNullable<SnipesQuery['source']>; label: string }[] = 
   { value: 'all', label: 'Все' },
   { value: 'dmarket', label: 'Лот на DMarket' },
   { value: 'whiteMarket', label: 'Лот на White' },
+  { value: 'csfloat', label: 'Лот на CSFloat' },
 ];
 
 const GRID = 'grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3';
@@ -39,15 +42,23 @@ export const SnipesPanel = ({ onCheck }: { onCheck: (snipe: Snipe) => void }) =>
   const [specialOnly, setSpecialOnly] = useState(true);
   const [source, setSource] = useState<NonNullable<SnipesQuery['source']>>('all');
   const [sort, setSort] = useState<SnipeSort>('profit');
+  const [floatFrom, setFloatFrom] = useState('');
+  const [floatTo, setFloatTo] = useState('');
+  const [phase, setPhase] = useState<'all' | MarketPhase>('all');
 
   const search = useDebouncedValue(q);
   const priceFrom = useDebouncedValue(minPrice);
   const priceTo = useDebouncedValue(maxPrice);
+  const debouncedFloatFrom = useDebouncedValue(floatFrom);
+  const debouncedFloatTo = useDebouncedValue(floatTo);
 
   const snipes = useSnipes({
     q: search.trim() || undefined,
     minPrice: parseMoney(priceFrom),
     maxPrice: parseMoney(priceTo),
+    minFloat: parseFloatInput(debouncedFloatFrom),
+    maxFloat: parseFloatInput(debouncedFloatTo),
+    phase: phase === 'all' ? undefined : phase,
     specialOnly,
     source,
     sort,
@@ -104,6 +115,35 @@ export const SnipesPanel = ({ onCheck }: { onCheck: (snipe: Snipe) => void }) =>
             options={SORTS}
             aria-label="Сортировка"
             className="lg:ml-auto lg:w-56"
+          />
+        </div>
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+          <div className="flex items-center gap-2">
+            <span className="text-foreground-muted text-sm">Флоат</span>
+            <Input
+              inputMode="decimal"
+              value={floatFrom}
+              onChange={(event) => setFloatFrom(event.target.value.replace(/[^\d.,]/g, ''))}
+              placeholder="от"
+              aria-label="Флоат от"
+              className="numeric w-24"
+            />
+            <span className="text-foreground-subtle">...</span>
+            <Input
+              inputMode="decimal"
+              value={floatTo}
+              onChange={(event) => setFloatTo(event.target.value.replace(/[^\d.,]/g, ''))}
+              placeholder="до"
+              aria-label="Флоат до"
+              className="numeric w-24"
+            />
+          </div>
+          <Select
+            value={phase}
+            onChange={setPhase}
+            options={PHASE_FILTERS}
+            aria-label="Фаза Doppler"
+            className="sm:ml-auto sm:w-48"
           />
         </div>
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
