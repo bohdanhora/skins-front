@@ -10,7 +10,6 @@ interface ItemImageProps {
   imageClassName?: string;
 }
 
-/** Steam pictures on a soft glow of the rarity color. Plain img: thousands of remote thumbnails. */
 export const ItemImage = ({ src, alt, rarityColor, className, imageClassName }: ItemImageProps) => (
   <div
     className={cn(
@@ -26,7 +25,6 @@ export const ItemImage = ({ src, alt, rarityColor, className, imageClassName }: 
     }
   >
     {src ? (
-      // eslint-disable-next-line @next/next/no-img-element
       <img
         src={src}
         alt={alt}

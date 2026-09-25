@@ -21,7 +21,6 @@ const FloatPage = () => {
     from: params.get('from') ?? '',
     to: params.get('to') ?? '',
   });
-  // A new start remounts the search panel, so "check" always opens a fresh search.
   const [searchKey, setSearchKey] = useState(0);
 
   const check = (snipe: Snipe) => {

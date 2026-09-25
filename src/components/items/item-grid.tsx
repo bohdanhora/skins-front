@@ -17,7 +17,6 @@ interface ItemGridProps {
   query: UseInfiniteQueryResult<InfiniteData<ItemsPage>, Error>;
   mode: DealMode;
   empty: ReactNode;
-  /** Shown above the grid, next to the result count. */
   toolbar?: ReactNode;
 }
 

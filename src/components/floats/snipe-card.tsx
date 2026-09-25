@@ -25,7 +25,6 @@ const PHASES: Record<string, string> = {
 
 const phaseLabel = (phase: string): string => PHASES[phase] ?? phase;
 
-/** Why this order pays more than the usual price: the one thing to understand about a find. */
 export const snipeReason = (snipe: Snipe): string => {
   const reasons = [
     snipe.orderFloatRange ? `флоат ${formatRange(snipe.orderFloatRange)}` : null,

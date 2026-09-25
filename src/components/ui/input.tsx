@@ -34,7 +34,6 @@ interface MoneyInputProps extends Omit<
   onChange: (value: string) => void;
 }
 
-/** Dollar amount typed as text, so "1," and "1." both work while typing. */
 export const MoneyInput = ({ value, onChange, className, ...props }: MoneyInputProps) => (
   <div className="relative">
     <span className="text-foreground-subtle pointer-events-none absolute top-1/2 left-3.5 -translate-y-1/2 text-sm">

@@ -5,11 +5,9 @@ const usd = new Intl.NumberFormat('en-US', {
   maximumFractionDigits: 2,
 });
 
-/** Cents to "$1,234.56". */
 export const formatUsd = (cents: number | null | undefined): string =>
   cents === null || cents === undefined ? '-' : usd.format(cents / 100);
 
-/** Cents to "+$1.20" or "-$0.40". */
 export const formatSignedUsd = (cents: number): string =>
   `${cents > 0 ? '+' : cents < 0 ? '-' : ''}${usd.format(Math.abs(cents) / 100)}`;
 

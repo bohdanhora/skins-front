@@ -8,7 +8,6 @@ import { cn } from '@/lib/utils/cn';
 
 const TICK_MS = 30_000;
 
-/** "Prices from 3 minutes ago", so it is always clear how fresh the numbers are. */
 export const StatusPill = ({ className }: { className?: string }) => {
   const status = useStatus();
   const [now, setNow] = useState(() => Date.now());

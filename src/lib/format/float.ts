@@ -2,7 +2,6 @@ import type { Wear } from './item-name';
 
 export type FloatRange = [number, number];
 
-/** Where each exterior starts and ends on the 0..1 float scale. */
 export const WEAR_RANGES: Record<Wear, FloatRange> = {
   FN: [0, 0.07],
   MW: [0.07, 0.15],
@@ -11,7 +10,6 @@ export const WEAR_RANGES: Record<Wear, FloatRange> = {
   BS: [0.45, 1],
 };
 
-/** DMarket float buckets, the same ones its buy orders use. */
 const BUCKETS: Record<Wear, FloatRange[]> = {
   FN: [
     [0, 0.01],
@@ -59,7 +57,6 @@ export const formatFloat = (value: number, digits = 4): string => value.toFixed(
 export const formatRange = ([from, to]: FloatRange): string =>
   `${formatFloat(from, 2)}-${formatFloat(to, 2)}`;
 
-/** "0,15" and "0.15" both work while typing. */
 export const parseFloatInput = (value: string): number | undefined => {
   const parsed = Number(value.replace(',', '.'));
 

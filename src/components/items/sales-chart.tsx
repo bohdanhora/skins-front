@@ -35,7 +35,6 @@ const niceTicks = (min: number, max: number): number[] => {
 
 interface SalesChartProps {
   name: string;
-  /** Cheapest price right now, cents: drawn as a reference line. */
   currentPrice: number | null;
 }
 
@@ -136,7 +135,6 @@ const Plot = ({ days, currentPrice }: { days: SalesDay[]; currentPrice: number |
   const height = countTop + COUNT_HEIGHT + 22;
   const barWidth = Math.min(BAR_MAX, Math.max(2, step - BAR_GAP));
 
-  // Days without sales break the line instead of pretending the price stayed put.
   const segments: string[] = [];
   let current = '';
 
@@ -322,7 +320,6 @@ const Plot = ({ days, currentPrice }: { days: SalesDay[]; currentPrice: number |
   );
 };
 
-/** A column with a 4px rounded top and a square base. */
 const roundedTop = (left: number, base: number, width: number, height: number): string => {
   const radius = Math.min(4, width / 2, height);
   const top = base - height;

@@ -2,7 +2,6 @@ const MINUTE_MS = 60_000;
 const HOUR_MS = 60 * MINUTE_MS;
 const DAY_MS = 24 * HOUR_MS;
 
-/** Russian plural: plural(5, ['минута', 'минуты', 'минут']). */
 export const plural = (count: number, forms: [string, string, string]): string => {
   const tens = Math.abs(count) % 100;
   const units = tens % 10;

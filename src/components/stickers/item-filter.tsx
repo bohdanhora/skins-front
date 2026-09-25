@@ -15,10 +15,6 @@ interface ItemFilterProps {
   onChange: (value: string) => void;
 }
 
-/**
- * Optional item for the sticker search. Typing "AK-47" keeps every AK-47;
- * picking a suggestion narrows it to one exact skin and wear.
- */
 export const ItemFilter = ({ value, onChange }: ItemFilterProps) => {
   const [focused, setFocused] = useState(false);
   const search = useDebouncedValue(value, 250).trim();
@@ -68,7 +64,6 @@ export const ItemFilter = ({ value, onChange }: ItemFilterProps) => {
               >
                 <span className="bg-surface-muted flex size-9 shrink-0 items-center justify-center rounded-xl">
                   {item.image ? (
-                    // eslint-disable-next-line @next/next/no-img-element
                     <img src={item.image} alt="" className="size-8 object-contain" />
                   ) : null}
                 </span>

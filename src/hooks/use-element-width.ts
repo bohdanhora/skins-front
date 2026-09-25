@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
 
-/** Width of an element, kept in sync as it resizes. */
 export const useElementWidth = <T extends HTMLElement>() => {
   const ref = useRef<T>(null);
   const [width, setWidth] = useState(0);

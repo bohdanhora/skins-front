@@ -16,7 +16,6 @@ const read = <T>(key: string, fallback: T): T => {
 
 const cache = new Map<string, { raw: string | null; value: unknown }>();
 
-/** Returns the same object while the stored text is unchanged, as useSyncExternalStore requires. */
 const snapshot = <T>(key: string, fallback: T): T => {
   let raw: string | null = null;
 
@@ -46,7 +45,6 @@ const subscribe = (onChange: () => void): (() => void) => {
   };
 };
 
-/** A small localStorage-backed state shared by every component that uses the same key. */
 export const useLocalStore = <T>(key: string, fallback: T): [T, (next: T) => void] => {
   const value = useSyncExternalStore(
     subscribe,

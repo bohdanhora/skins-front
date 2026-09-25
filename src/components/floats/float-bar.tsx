@@ -5,12 +5,10 @@ const TRACK =
 
 interface FloatBarProps {
   value: number;
-  /** Zoom into one exterior so neighbouring floats are easy to tell apart. */
   zoom?: [number, number];
   className?: string;
 }
 
-/** A float as a marker on the wear scale: green is fresh, red is battle-scarred. */
 export const FloatBar = ({ value, zoom, className }: FloatBarProps) => {
   const [from, to] = zoom ?? [0, 1];
   const position = Math.min(100, Math.max(0, ((value - from) / (to - from)) * 100));
