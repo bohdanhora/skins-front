@@ -30,7 +30,6 @@ export const ItemTitle = ({ name, size = 'md' }: ItemTitleProps) => {
             {parsed.wear}
           </Tag>
         ) : null}
-        {parsed.phase ? <Tag className="bg-accent-soft text-accent">{parsed.phase}</Tag> : null}
         {secondary ? (
           <span className="text-foreground-muted truncate text-xs">{secondary}</span>
         ) : null}
@@ -43,6 +42,18 @@ export const ItemTitle = ({ name, size = 'md' }: ItemTitleProps) => {
         )}
       >
         {primary}
+        {parsed.phase || parsed.commonPhases ? (
+          <span
+            className="bg-accent-soft text-accent ml-1.5 inline-block rounded-md px-1.5 py-0.5 align-[0.1em] text-[0.75rem] font-semibold whitespace-nowrap"
+            title={
+              parsed.phase
+                ? undefined
+                : 'Самая дешёвая из Phase 1-4. Ruby, Sapphire, Emerald и Black Pearl идут отдельными карточками'
+            }
+          >
+            {parsed.phase ?? 'Phase 1-4'}
+          </span>
+        ) : null}
       </p>
     </div>
   );

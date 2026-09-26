@@ -7,6 +7,7 @@ export interface ItemName {
   statTrak: boolean;
   souvenir: boolean;
   phase: string | null;
+  commonPhases: boolean;
 }
 
 const WEARS: Record<string, Wear> = {
@@ -27,6 +28,7 @@ export const WEAR_LABELS: Record<Wear, string> = {
 
 const WEAR_SUFFIX = / \((Factory New|Minimal Wear|Field-Tested|Well-Worn|Battle-Scarred)\)$/;
 const PHASE_SUFFIX = / \[([^\]]+)\]$/;
+const DOPPLER = /^(Gamma )?Doppler$/;
 
 export const parseItemName = (name: string): ItemName => {
   let rest = name;
@@ -56,15 +58,18 @@ export const parseItemName = (name: string): ItemName => {
   const separator = rest.indexOf(' | ');
 
   if (separator === -1) {
-    return { base: rest, detail: '', wear, statTrak, souvenir, phase };
+    return { base: rest, detail: '', wear, statTrak, souvenir, phase, commonPhases: false };
   }
+
+  const detail = rest.slice(separator + 3);
 
   return {
     base: rest.slice(0, separator),
-    detail: rest.slice(separator + 3),
+    detail,
     wear,
     statTrak,
     souvenir,
     phase,
+    commonPhases: phase === null && DOPPLER.test(detail),
   };
 };

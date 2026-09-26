@@ -28,6 +28,7 @@ describe('parseItemName', () => {
       statTrak: true,
       souvenir: false,
       phase: null,
+      commonPhases: false,
     });
   });
 
@@ -37,6 +38,11 @@ describe('parseItemName', () => {
       detail: 'Doppler',
       wear: 'FN',
       statTrak: true,
+      commonPhases: true,
+    });
+    expect(parseItemName('★ Karambit | Gamma Doppler (Factory New) [Emerald]')).toMatchObject({
+      phase: 'Emerald',
+      commonPhases: false,
     });
     expect(parseItemName('Sticker | Natus Vincere | Katowice 2019')).toMatchObject({
       base: 'Sticker',
