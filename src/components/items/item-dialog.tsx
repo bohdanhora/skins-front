@@ -16,7 +16,7 @@ import type { ReactNode } from 'react';
 import { Button } from '@/components/ui/button';
 import { Dialog } from '@/components/ui/dialog';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useItem, useItemListings, useStatus } from '@/lib/api/queries';
+import { useItem, useItemListings, useStatus, useSteamPrice } from '@/lib/api/queries';
 import type { Flip, Item, MarketId } from '@/lib/api/types';
 import { dealWarning } from '@/lib/deal-warning';
 import { parseItemName } from '@/lib/format/item-name';
@@ -31,14 +31,6 @@ import { ItemImage } from './item-image';
 import { ItemTitle } from './item-title';
 import { offersLabel } from './price-rows';
 import { SalesChart } from './sales-chart';
-
-const cheapestListing = (item: Item): number | null => {
-  const prices = MARKET_ORDER.map((market) => item[market])
-    .filter((quote) => quote && quote.listings > 0 && quote.price !== null)
-    .map((quote) => quote!.price!);
-
-  return prices.length > 0 ? Math.min(...prices) : null;
-};
 
 interface ItemDialogProps {
   name: string | null;
@@ -102,16 +94,18 @@ const ItemDetails = ({ item, onNavigate }: { item: Item; onNavigate: () => void 
 
       <Verdict item={item} />
 
-      <div className="grid gap-3 sm:grid-cols-3">
+      <div className="grid gap-3 sm:grid-cols-2">
         {MARKET_ORDER.map((market) => (
           <MarketPanel key={market} item={item} market={market} />
         ))}
       </div>
 
+      {item.phase ? null : <SteamRow name={item.name} />}
+
       <ResaleSection item={item} />
 
       <section className="space-y-3">
-        <h3 className="text-sm font-semibold">Продажи на DMarket</h3>
+        <h3 className="text-sm font-semibold">История продаж и цены</h3>
         {item.top ? (
           <div className="bg-gain-soft text-gain flex items-center gap-2 rounded-2xl px-4 py-3 text-sm font-medium">
             <TrendingDown className="size-4 shrink-0" aria-hidden />
@@ -150,7 +144,7 @@ const ItemDetails = ({ item, onNavigate }: { item: Item; onNavigate: () => void 
             />
           </div>
         ) : null}
-        <SalesChart name={item.name} currentPrice={item.top?.price ?? cheapestListing(item)} />
+        <SalesChart item={item} />
       </section>
 
       {parseItemName(item.name).wear ? (
@@ -376,3 +370,36 @@ const DetailsSkeleton = () => (
     </div>
   </div>
 );
+
+const SteamRow = ({ name }: { name: string }) => {
+  const steam = useSteamPrice(name, true);
+
+  if (steam.isPending) {
+    return <Skeleton className="h-14 rounded-2xl" />;
+  }
+
+  if (steam.isError || (!steam.data.lowest && !steam.data.median)) {
+    return null;
+  }
+
+  return (
+    <a
+      href={steam.data.url}
+      target="_blank"
+      rel="noreferrer"
+      className="border-border hover:bg-surface-muted flex flex-wrap items-center gap-x-4 gap-y-1 rounded-2xl border px-4 py-3 text-sm"
+    >
+      <span className="font-medium">Steam Market</span>
+      <span className="text-foreground-muted">
+        лот от{' '}
+        <span className="text-foreground numeric font-semibold">
+          {formatUsd(steam.data.lowest)}
+        </span>
+      </span>
+      <span className="text-foreground-muted">
+        медиана <span className="text-foreground numeric">{formatUsd(steam.data.median)}</span>, за
+        сутки {steam.data.volume}
+      </span>
+    </a>
+  );
+};
