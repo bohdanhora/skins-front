@@ -475,3 +475,75 @@ export interface TradeUpCatalog {
   skins: TradeUpSkin[];
   updatedAt: string | null;
 }
+
+export interface BetTeam {
+  name: string;
+  image: string | null;
+  rank: number | null;
+  points: number | null;
+  roster: string[];
+  mapGames: number;
+}
+
+export interface BetMapRecord {
+  offset: number;
+  games: number;
+  wins: number;
+}
+
+export interface BetPlannedMap {
+  map: string;
+  pickedBy: 1 | 2 | null;
+  chance: number;
+  team1: BetMapRecord | null;
+  team2: BetMapRecord | null;
+}
+
+export interface BetVeto {
+  team: 1 | 2;
+  step: 'ban' | 'pick';
+  map: string;
+}
+
+export interface BetOffer {
+  kind: 'winner' | 'map' | 'handicap' | 'total';
+  line: number;
+  mapIndex: number | null;
+  side: 1 | 2;
+  model: number;
+  market: number | null;
+  chance: number;
+  odds: number;
+  bookmaker: string;
+  bookmakers: number;
+  expectedValue: number;
+  stake: number;
+}
+
+export interface BetMatch {
+  id: number;
+  startsAt: string;
+  live: boolean;
+  bestOf: number;
+  event: string;
+  stage: string;
+  team1: BetTeam;
+  team2: BetTeam;
+  win: number;
+  scores: { first: number; second: number; chance: number }[];
+  maps: BetPlannedMap[];
+  vetoes: BetVeto[];
+  markets: BetOffer[];
+  bestBet: BetOffer | null;
+  oddsFound: boolean;
+  confidence: 'high' | 'medium' | 'low';
+}
+
+export interface BettingOverview {
+  matches: BetMatch[];
+  mapsKnown: number;
+  mapPool: string[];
+  standingsDate: string | null;
+  sync: { running: boolean; pagesDone: number; pagesQueued: number; lastError: string | null };
+  sources: { schedule: boolean; odds: boolean };
+}

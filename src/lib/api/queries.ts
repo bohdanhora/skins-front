@@ -11,6 +11,7 @@ import { useFees, useWithdrawals } from '@/lib/storage/settings';
 
 import { apiGet } from './client';
 import type {
+  BettingOverview,
   BlueGemSearch,
   BlueValue,
   CheapestPattern,
@@ -327,4 +328,12 @@ export const useSteamPrice = (name: string, enabled: boolean) =>
     enabled,
     staleTime: 15 * 60_000,
     retry: false,
+  });
+
+export const useBettingMatches = () =>
+  useQuery({
+    queryKey: ['betting'],
+    queryFn: ({ signal }) => apiGet<BettingOverview>('/betting/matches', undefined, signal),
+    refetchInterval: 5 * 60_000,
+    staleTime: 60_000,
   });

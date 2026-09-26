@@ -1,6 +1,15 @@
 'use client';
 
-import { BookOpen, Flame, FlaskConical, Gauge, Search, Sparkles, Sticker } from 'lucide-react';
+import {
+  BookOpen,
+  Flame,
+  FlaskConical,
+  Gauge,
+  Search,
+  Sparkles,
+  Sticker,
+  Swords,
+} from 'lucide-react';
 import type { Route } from 'next';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -27,6 +36,7 @@ const MAIN_NAV: NavItem[] = [
   { href: '/float', label: 'Флоат', icon: Gauge },
   { href: '/stickers', label: 'Наклейки', icon: Sticker },
   { href: '/craft' as Route, label: 'Крафт', icon: FlaskConical },
+  { href: '/betting' as Route, label: 'Ставки', icon: Swords },
 ];
 
 const isActive = (pathname: string, href: string): boolean =>
