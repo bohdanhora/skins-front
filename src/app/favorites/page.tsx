@@ -2,16 +2,29 @@
 
 import { Heart } from 'lucide-react';
 import Link from 'next/link';
+import { useState } from 'react';
 
 import { ItemGrid } from '@/components/items/item-grid';
 import { EmptyState } from '@/components/states/empty-state';
 import { Button } from '@/components/ui/button';
+import { Select } from '@/components/ui/select';
 import { useItems } from '@/lib/api/queries';
+import type { ItemSort } from '@/lib/api/types';
 import { useFavorites } from '@/lib/storage/settings';
+
+const SORTS: { value: ItemSort; label: string }[] = [
+  { value: 'name', label: 'По названию' },
+  { value: 'priceAsc', label: 'Сначала дешёвые' },
+  { value: 'priceDesc', label: 'Сначала дорогие' },
+  { value: 'sales8w', label: 'Чаще всего продают' },
+  { value: 'belowSales', label: 'Ниже истории продаж' },
+  { value: 'benefit', label: 'Больше разница между площадками' },
+];
 
 const FavoritesPage = () => {
   const { favorites } = useFavorites();
-  const items = useItems({ names: favorites, sort: 'name' }, { enabled: favorites.length > 0 });
+  const [sort, setSort] = useState<ItemSort>('name');
+  const items = useItems({ names: favorites, sort }, { enabled: favorites.length > 0 });
 
   const empty = (
     <EmptyState
@@ -28,11 +41,22 @@ const FavoritesPage = () => {
 
   return (
     <div className="space-y-6">
-      <section className="space-y-2">
-        <h1 className="page-title">Избранное</h1>
-        <p className="text-foreground-muted text-[0.9375rem]">
-          Свежие цены на предметы, за которыми ты следишь.
-        </p>
+      <section className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <div className="space-y-2">
+          <h1 className="page-title">Избранное</h1>
+          <p className="text-foreground-muted text-[0.9375rem]">
+            Свежие цены на предметы, за которыми ты следишь.
+          </p>
+        </div>
+        {favorites.length > 0 ? (
+          <Select
+            value={sort}
+            onChange={setSort}
+            options={SORTS}
+            aria-label="Сортировка"
+            className="sm:w-60"
+          />
+        ) : null}
       </section>
 
       {favorites.length === 0 ? empty : <ItemGrid query={items} mode="all" empty={empty} />}

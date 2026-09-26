@@ -33,7 +33,8 @@ const SKIN_SORTS: { value: StickerSkinsSort; label: string }[] = [
 ];
 
 const SORTS: { value: ItemSort; label: string }[] = [
-  { value: 'popular', label: 'Сначала популярные' },
+  { value: 'sales8w', label: 'Чаще всего продают' },
+  { value: 'popular', label: 'Больше всего лотов' },
   { value: 'benefit', label: 'Больше разница в цене' },
   { value: 'priceAsc', label: 'Сначала дешёвые' },
   { value: 'priceDesc', label: 'Сначала дорогие' },

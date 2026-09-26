@@ -36,12 +36,14 @@ const SORTS: { value: ItemSort; label: string }[] = [
   { value: 'bidCover', label: 'Автопокупка ближе к цене' },
   { value: 'priceAsc', label: 'Сначала дешёвые' },
   { value: 'priceDesc', label: 'Сначала дорогие' },
-  { value: 'sales8w', label: 'Больше продаж за 8 недель' },
+  { value: 'sales8w', label: 'Чаще всего продают' },
+  { value: 'popular', label: 'Больше всего лотов' },
 ];
 
 const TopPage = () => {
   const [q, setQ] = useState('');
   const [category, setCategory] = useState<ItemCategory | undefined>();
+  const [subcategory, setSubcategory] = useState<string | undefined>();
   const [minPrice, setMinPrice] = useState('1');
   const [maxPrice, setMaxPrice] = useState('');
   const [activeOnly, setActiveOnly] = useState(true);
@@ -64,6 +66,7 @@ const TopPage = () => {
     mode: 'top',
     q: search.trim() || undefined,
     category,
+    subcategory,
     wear: wear === 'all' ? undefined : wear,
     edition: edition === 'all' ? undefined : edition,
     phase: phase === 'all' ? undefined : phase,
@@ -125,7 +128,13 @@ const TopPage = () => {
             className="lg:ml-auto lg:w-60"
           />
         </div>
-        <CategoryChips value={category} onChange={setCategory} exclude={['sticker']} />
+        <CategoryChips
+          value={category}
+          onChange={setCategory}
+          subcategory={subcategory}
+          onSubcategoryChange={setSubcategory}
+          exclude={['sticker']}
+        />
         <ItemFilterSelects
           wear={wear}
           onWearChange={setWear}

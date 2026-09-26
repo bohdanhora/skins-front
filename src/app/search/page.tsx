@@ -2,7 +2,6 @@
 
 import { SearchX } from 'lucide-react';
 import type { Route } from 'next';
-import Image from 'next/image';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useEffect, useState } from 'react';
 
@@ -19,7 +18,7 @@ import { Chip } from '@/components/ui/chip';
 import { parseMoney } from '@/components/ui/input';
 import { Select } from '@/components/ui/select';
 import { useDebouncedValue } from '@/hooks/use-debounced-value';
-import { useItemFacets, useItems } from '@/lib/api/queries';
+import { useItems } from '@/lib/api/queries';
 import type {
   ItemCategory,
   ItemEdition,
@@ -30,12 +29,13 @@ import type {
 } from '@/lib/api/types';
 
 const SORTS: { value: ItemSort; label: string }[] = [
-  { value: 'popular', label: 'Сначала популярные' },
+  { value: 'sales8w', label: 'Чаще всего продают' },
+  { value: 'popular', label: 'Больше всего лотов' },
   { value: 'priceAsc', label: 'Сначала дешёвые' },
   { value: 'priceDesc', label: 'Сначала дорогие' },
   { value: 'benefit', label: 'Больше разница в цене' },
   { value: 'name', label: 'По алфавиту' },
-  { value: 'sales8w', label: 'Больше продаж за 8 недель' },
+  { value: 'belowSales', label: 'Ниже истории продаж' },
 ];
 
 const QUICK_SEARCHES = ['AK-47', 'AWP', 'Karambit', 'Butterfly', 'Glock-18', 'Case', 'Doppler'];
@@ -45,15 +45,15 @@ const SearchPage = () => {
   const params = useSearchParams();
   const [q, setQ] = useState(params.get('q') ?? '');
   const [category, setCategory] = useState<ItemCategory | undefined>();
+  const [subcategory, setSubcategory] = useState<string | undefined>();
   const [minPrice, setMinPrice] = useState('');
   const [maxPrice, setMaxPrice] = useState('');
-  const [sort, setSort] = useState<ItemSort>('popular');
+  const [sort, setSort] = useState<ItemSort>('sales8w');
   const [wear, setWear] = useState<'all' | ItemWear>('all');
   const [edition, setEdition] = useState<'all' | ItemEdition>('all');
   const [phase, setPhase] = useState<'all' | MarketPhase>('all');
   const [cheapestOn, setCheapestOn] = useState<'all' | MarketId>('all');
   const [collection, setCollection] = useState('');
-  const facets = useItemFacets();
 
   const search = useDebouncedValue(q);
   const priceFrom = useDebouncedValue(minPrice);
@@ -70,6 +70,7 @@ const SearchPage = () => {
   const items = useItems({
     q: search.trim() || undefined,
     category,
+    subcategory,
     wear: wear === 'all' ? undefined : wear,
     edition: edition === 'all' ? undefined : edition,
     phase: phase === 'all' ? undefined : phase,
@@ -122,32 +123,12 @@ const SearchPage = () => {
             className="sm:ml-auto sm:w-60"
           />
         </div>
-        <CategoryChips value={category} onChange={setCategory} />
-        {!q && !collection && facets.data?.collections.length ? (
-          <div className="no-scrollbar -mx-4 flex gap-2 overflow-x-auto px-4 sm:mx-0 sm:px-0">
-            {facets.data.collections.slice(0, 12).map((entry) => (
-              <button
-                key={entry.name}
-                type="button"
-                onClick={() => setCollection(entry.name)}
-                className="border-border bg-surface-muted hover:border-accent/40 flex min-w-44 items-center gap-3 rounded-2xl border p-2 text-left"
-              >
-                <span className="bg-surface flex size-12 shrink-0 items-center justify-center rounded-xl">
-                  {entry.image ? (
-                    <Image
-                      src={entry.image}
-                      alt=""
-                      width={44}
-                      height={44}
-                      className="object-contain"
-                    />
-                  ) : null}
-                </span>
-                <span className="line-clamp-2 text-xs font-medium">{entry.name}</span>
-              </button>
-            ))}
-          </div>
-        ) : null}
+        <CategoryChips
+          value={category}
+          onChange={setCategory}
+          subcategory={subcategory}
+          onSubcategoryChange={setSubcategory}
+        />
         <ItemFilterSelects
           wear={wear}
           onWearChange={setWear}

@@ -1,13 +1,21 @@
 'use client';
 
-import { Search, X } from 'lucide-react';
-import type { ReactNode } from 'react';
+import * as Popover from '@radix-ui/react-popover';
+import { Check, ChevronDown, Search, X } from 'lucide-react';
+import { useState, type ReactNode } from 'react';
 
 import { Chip } from '@/components/ui/chip';
 import { IconInput, MoneyInput } from '@/components/ui/input';
 import { Select } from '@/components/ui/select';
 import { useItemFacets } from '@/lib/api/queries';
-import type { ItemCategory, ItemEdition, ItemWear, MarketId, MarketPhase } from '@/lib/api/types';
+import type {
+  ItemCategory,
+  ItemEdition,
+  ItemWear,
+  MarketId,
+  MarketPhase,
+  SubcategoryOption,
+} from '@/lib/api/types';
 import {
   CATEGORIES,
   EDITION_FILTERS,
@@ -20,24 +28,171 @@ import { cn } from '@/lib/utils/cn';
 interface CategoryChipsProps {
   value: ItemCategory | undefined;
   onChange: (value: ItemCategory | undefined) => void;
+  subcategory?: string;
+  onSubcategoryChange?: (value: string | undefined) => void;
   exclude?: ItemCategory[];
 }
 
-export const CategoryChips = ({ value, onChange, exclude = [] }: CategoryChipsProps) => (
-  <div className="no-scrollbar -mx-4 flex gap-2 overflow-x-auto px-4 sm:mx-0 sm:flex-wrap sm:px-0">
-    <Chip selected={value === undefined} onClick={() => onChange(undefined)}>
-      Всё
-    </Chip>
-    {CATEGORIES.filter((category) => !exclude.includes(category.value)).map((category) => (
-      <Chip
-        key={category.value}
-        selected={value === category.value}
-        onClick={() => onChange(value === category.value ? undefined : category.value)}
-      >
-        {category.label}
+const SEARCHABLE_FROM = 12;
+
+export const CategoryChips = ({
+  value,
+  onChange,
+  subcategory,
+  onSubcategoryChange,
+  exclude = [],
+}: CategoryChipsProps) => {
+  const facets = useItemFacets();
+  const [open, setOpen] = useState<ItemCategory | null>(null);
+
+  const select = (next: ItemCategory | undefined) => {
+    onChange(next);
+    onSubcategoryChange?.(undefined);
+  };
+
+  return (
+    <div className="no-scrollbar -mx-4 flex gap-2 overflow-x-auto px-4 sm:mx-0 sm:flex-wrap sm:px-0">
+      <Chip selected={value === undefined} onClick={() => select(undefined)}>
+        Всё
       </Chip>
-    ))}
-  </div>
+      {CATEGORIES.filter((category) => !exclude.includes(category.value)).map((category) => {
+        const options = onSubcategoryChange
+          ? (facets.data?.subcategories?.[category.value] ?? [])
+          : [];
+        const selected = value === category.value;
+
+        if (options.length === 0) {
+          return (
+            <Chip
+              key={category.value}
+              selected={selected}
+              onClick={() => select(selected ? undefined : category.value)}
+            >
+              {category.label}
+            </Chip>
+          );
+        }
+
+        return (
+          <Popover.Root
+            key={category.value}
+            open={open === category.value}
+            onOpenChange={(next) => setOpen(next ? category.value : null)}
+          >
+            <Popover.Trigger asChild>
+              <Chip
+                selected={selected}
+                onClick={() => {
+                  if (!selected) select(category.value);
+                }}
+              >
+                {category.label}
+                {selected && subcategory ? (
+                  <span className="max-w-32 truncate opacity-80">· {subcategory}</span>
+                ) : null}
+                <ChevronDown className="size-3.5 opacity-70" aria-hidden />
+              </Chip>
+            </Popover.Trigger>
+            <Popover.Portal>
+              <Popover.Content
+                align="start"
+                sideOffset={8}
+                collisionPadding={16}
+                className="bg-surface border-border z-50 w-[min(22rem,calc(100vw-2rem))] rounded-2xl border p-2 shadow-[0_12px_40px_-12px_rgb(0_0_0/0.45)]"
+              >
+                <SubcategoryList
+                  options={options}
+                  allLabel={category.all ?? category.label}
+                  value={selected ? subcategory : undefined}
+                  onChange={(next) => {
+                    onChange(category.value);
+                    onSubcategoryChange?.(next);
+                    setOpen(null);
+                  }}
+                />
+              </Popover.Content>
+            </Popover.Portal>
+          </Popover.Root>
+        );
+      })}
+    </div>
+  );
+};
+
+interface SubcategoryListProps {
+  options: SubcategoryOption[];
+  allLabel: string;
+  value: string | undefined;
+  onChange: (value: string | undefined) => void;
+}
+
+const SubcategoryList = ({ options, allLabel, value, onChange }: SubcategoryListProps) => {
+  const [filter, setFilter] = useState('');
+  const words = filter.toLowerCase().split(/\s+/).filter(Boolean);
+  const visible = options.filter((option) =>
+    words.every((word) => option.value.toLowerCase().includes(word)),
+  );
+
+  return (
+    <div className="space-y-1.5">
+      {options.length > SEARCHABLE_FROM ? (
+        <input
+          autoFocus
+          value={filter}
+          onChange={(event) => setFilter(event.target.value)}
+          placeholder="Найти"
+          aria-label="Найти подкатегорию"
+          className="border-border-strong bg-surface focus-visible:border-accent h-9 w-full rounded-xl border px-3 text-sm focus-visible:outline-none"
+        />
+      ) : null}
+      <ul className="max-h-80 space-y-0.5 overflow-y-auto overscroll-contain">
+        <li>
+          <SubcategoryButton selected={value === undefined} onClick={() => onChange(undefined)}>
+            <span className="flex-1 font-semibold">{allLabel}</span>
+          </SubcategoryButton>
+        </li>
+        {visible.map((option) => (
+          <li key={option.value}>
+            <SubcategoryButton
+              selected={value === option.value}
+              onClick={() => onChange(option.value)}
+            >
+              <span className="bg-surface-muted flex size-9 shrink-0 items-center justify-center rounded-lg">
+                {option.image ? (
+                  <img src={option.image} alt="" loading="lazy" className="size-8 object-contain" />
+                ) : null}
+              </span>
+              <span className="min-w-0 flex-1 truncate">{option.value}</span>
+              <span className="text-foreground-subtle numeric text-xs">{option.count}</span>
+            </SubcategoryButton>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+};
+
+const SubcategoryButton = ({
+  selected,
+  onClick,
+  children,
+}: {
+  selected: boolean;
+  onClick: () => void;
+  children: ReactNode;
+}) => (
+  <button
+    type="button"
+    onClick={onClick}
+    aria-pressed={selected}
+    className={cn(
+      'flex w-full items-center gap-2.5 rounded-xl px-2.5 py-1.5 text-left text-sm',
+      selected ? 'bg-accent-soft text-accent' : 'hover:bg-surface-muted text-foreground',
+    )}
+  >
+    {children}
+    {selected ? <Check className="size-4 shrink-0" aria-hidden /> : null}
+  </button>
 );
 
 interface SearchFieldProps {

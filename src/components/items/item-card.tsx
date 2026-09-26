@@ -1,9 +1,10 @@
 'use client';
 
-import { TriangleAlert } from 'lucide-react';
+import { TrendingDown, TriangleAlert } from 'lucide-react';
 
 import type { DealMode, Item } from '@/lib/api/types';
 import { dealWarning } from '@/lib/deal-warning';
+import { formatPercent, formatUsd } from '@/lib/format/money';
 
 import { BenefitBadge } from './benefit-badge';
 import { FavoriteButton } from './favorite-button';
@@ -57,6 +58,15 @@ export const ItemCard = ({ item, mode, onOpen }: ItemCardProps) => {
             </span>
           ) : null}
         </div>
+        {mode !== 'top' && item.top ? (
+          <p
+            className="text-gain mt-2 flex items-center gap-1 text-[0.6875rem] font-medium"
+            title={`Недавно продавали от ${formatUsd(item.top.reference)}`}
+          >
+            <TrendingDown className="size-3.5" aria-hidden />
+            Ниже истории продаж на {formatPercent(item.top.percent)}
+          </p>
+        ) : null}
       </div>
     </article>
   );

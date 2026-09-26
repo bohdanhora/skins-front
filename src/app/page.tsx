@@ -38,13 +38,16 @@ const SORTS: { value: ItemSort; label: string }[] = [
   { value: 'benefitAmount', label: 'Больше выгода в $' },
   { value: 'priceAsc', label: 'Сначала дешёвые' },
   { value: 'priceDesc', label: 'Сначала дорогие' },
-  { value: 'popular', label: 'Сначала популярные' },
+  { value: 'sales8w', label: 'Чаще всего продают' },
+  { value: 'belowSales', label: 'Ниже истории продаж' },
+  { value: 'popular', label: 'Больше всего лотов' },
 ];
 
 const DealsPage = () => {
   const [mode, setMode] = useState<Mode>('gap');
   const [q, setQ] = useState('');
   const [category, setCategory] = useState<ItemCategory | undefined>();
+  const [subcategory, setSubcategory] = useState<string | undefined>();
   const [minPrice, setMinPrice] = useState('1');
   const [maxPrice, setMaxPrice] = useState('');
   const [liquidOnly, setLiquidOnly] = useState(true);
@@ -64,6 +67,7 @@ const DealsPage = () => {
     mode,
     q: search.trim() || undefined,
     category,
+    subcategory,
     wear: wear === 'all' ? undefined : wear,
     edition: edition === 'all' ? undefined : edition,
     phase: phase === 'all' ? undefined : phase,
@@ -84,7 +88,7 @@ const DealsPage = () => {
       <section className="space-y-2">
         <h1 className="page-title">Где сейчас выгоднее</h1>
         <p className="text-foreground-muted max-w-2xl text-[0.9375rem] leading-relaxed">
-          Сравниваем цены white.market, DMarket и CSFloat
+          Сравниваем цены white.market, DMarket, CSFloat и lis-skins
           {compared ? ` на ${compared.toLocaleString('ru-RU')} предметов` : ''} и показываем, где
           купить дешевле и на чём можно заработать.
         </p>
@@ -123,7 +127,12 @@ const DealsPage = () => {
             className="lg:ml-auto lg:w-56"
           />
         </div>
-        <CategoryChips value={category} onChange={setCategory} />
+        <CategoryChips
+          value={category}
+          onChange={setCategory}
+          subcategory={subcategory}
+          onSubcategoryChange={setSubcategory}
+        />
         <ItemFilterSelects
           wear={wear}
           onWearChange={setWear}
