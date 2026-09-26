@@ -91,7 +91,7 @@ export const usePurchaseValuation = (
     purchase.stickers.map((name) => {
       const found = stickerQuery.data?.get(name);
 
-      return { name, price: found ? marketPrice(found) : null };
+      return { name, price: found ? marketPrice(found) : null, image: found?.image ?? null };
     }),
   );
   const stickerRange = stickers.length > 0 ? sumRanges(stickers) : null;

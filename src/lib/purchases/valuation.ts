@@ -12,6 +12,7 @@ export interface PremiumRange {
 export interface StickerValue extends PremiumRange {
   name: string;
   price: number | null;
+  image: string | null;
 }
 
 const STICKER_TIERS: [number, number][] = [
@@ -47,12 +48,14 @@ const range = (mid: number): PremiumRange => ({
   high: Math.round(mid * RANGE_HIGH),
 });
 
-export const stickerValues = (stickers: { name: string; price: number | null }[]): StickerValue[] =>
+export const stickerValues = (
+  stickers: { name: string; price: number | null; image?: string | null }[],
+): StickerValue[] =>
   stickers.map((sticker) => {
     const copies = stickers.filter((entry) => entry.name === sticker.name).length;
     const share = sticker.price ? stickerShare(sticker.name, sticker.price, copies) : 0;
 
-    return { ...sticker, ...range((sticker.price ?? 0) * share) };
+    return { ...sticker, image: sticker.image ?? null, ...range((sticker.price ?? 0) * share) };
   });
 
 export const sumRanges = (ranges: (PremiumRange | null)[]): PremiumRange =>

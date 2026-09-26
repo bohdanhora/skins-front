@@ -1,15 +1,19 @@
 'use client';
 
-import { CheckCircle2, Lock, Pencil } from 'lucide-react';
+import { ArrowRight, CheckCircle2, ChevronDown, Lock, Pencil } from 'lucide-react';
+import { useState, type ReactNode } from 'react';
 
+import { FloatBar } from '@/components/floats/float-bar';
 import { ItemImage } from '@/components/items/item-image';
 import { ItemTitle } from '@/components/items/item-title';
+import { stickerLabel } from '@/components/stickers/sticker-picker';
 import { Button } from '@/components/ui/button';
 import type { Item, SellMarketId } from '@/lib/api/types';
-import { formatFloat } from '@/lib/format/float';
+import { WEAR_RANGES } from '@/lib/format/float';
+import { parseItemName } from '@/lib/format/item-name';
 import { formatPercent, formatSignedUsd, formatUsd } from '@/lib/format/money';
-import { daysBetween, formatDate, formatDateTime, plural } from '@/lib/format/time';
-import { MARKETS, SELL_MARKET_ORDER } from '@/lib/markets';
+import { daysBetween, formatDateTime, plural } from '@/lib/format/time';
+import { MARKETS } from '@/lib/markets';
 import {
   bestOption,
   breakEvenPrice,
@@ -18,90 +22,191 @@ import {
   marketPrice,
   sellAdvice,
   sellOptions,
+  type Advice,
   type FeeTable,
   type Purchase,
-  type SellOption,
 } from '@/lib/purchases/purchases';
-import { withPremium } from '@/lib/purchases/valuation';
+import { withPremium, type PriceOption } from '@/lib/purchases/valuation';
 import { cn } from '@/lib/utils/cn';
 
-import { PriceStrip } from './price-strip';
+import { MarketTable, ValueDetails } from './purchase-details';
 import { usePurchaseForm } from './purchase-form';
 import { purchaseMarketDot, purchaseMarketName } from './purchase-shared';
-import { usePurchaseValuation } from './use-purchase-valuation';
+import { usePurchaseValuation, type Valuation } from './use-purchase-valuation';
 
-const ADVICE_TONES = {
-  gain: 'bg-gain-soft text-gain',
-  loss: 'bg-loss-soft text-loss',
-  warning: 'bg-warning-soft text-warning',
-  muted: 'bg-surface-muted text-foreground-muted',
+const ADVICE_DOTS: Record<Advice['tone'], string> = {
+  gain: 'bg-gain',
+  loss: 'bg-loss',
+  warning: 'bg-warning',
+  muted: 'bg-foreground-subtle',
 };
 
-interface CellProps {
-  label: string;
-  dot: string;
-  option: SellOption | undefined;
-  best: boolean;
-  amount: number;
-  detail: string;
-}
+const shortDate = new Intl.DateTimeFormat('ru-RU', { day: 'numeric', month: 'short' });
 
-const Cell = ({ label, dot, option, best, amount, detail }: CellProps) => (
-  <div className={cn('rounded-xl px-2.5 py-2', best ? 'bg-gain-soft' : 'bg-surface-muted/60')}>
-    <p className="text-foreground-muted flex items-center gap-1.5 text-[0.6875rem]">
-      <span className={cn('size-1.5 rounded-full', dot)} aria-hidden />
-      {label}
-    </p>
-    {option ? (
-      <>
-        <p
-          className={cn(
-            'numeric mt-0.5 text-[0.9375rem] font-semibold',
-            option.profit >= 0 ? 'text-gain' : 'text-loss',
-          )}
-        >
-          {formatSignedUsd(option.profit * amount)}
-        </p>
-        <p className="text-foreground-subtle numeric text-[0.6875rem]">
-          {option.kind === 'instant' ? 'продать' : 'выставить'} за {formatUsd(option.price)}
-        </p>
-      </>
-    ) : (
-      <p className="text-foreground-subtle mt-0.5 text-[0.8125rem]">нет цены</p>
+const ProfitPill = ({ profit, cost }: { profit: number; cost: number }) => (
+  <span
+    className={cn(
+      'numeric inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold',
+      profit >= 0 ? 'bg-gain-soft text-gain' : 'bg-loss-soft text-loss',
     )}
-    <p className="text-foreground-subtle numeric text-[0.6875rem]">{detail}</p>
-  </div>
+  >
+    {formatSignedUsd(profit)}
+    {cost > 0 ? (
+      <span className="ml-1 font-medium opacity-80">
+        {formatPercent((profit / cost) * 100, true)}
+      </span>
+    ) : null}
+  </span>
 );
 
-const Meta = ({ purchase }: { purchase: Purchase }) => (
-  <p className="text-foreground-subtle numeric mt-1 flex flex-wrap items-center gap-x-2 text-xs">
-    <span className="flex items-center gap-1">
-      <span className={cn('size-1.5 rounded-full', purchaseMarketDot(purchase.market))} />
-      {formatUsd(purchase.price)}
-      {purchase.amount > 1 ? ` × ${purchase.amount}` : ''} на {purchaseMarketName(purchase.market)}
-    </span>
-    <span>{formatDate(purchase.boughtAt)}</span>
-    {purchase.float !== null ? <span>флоат {formatFloat(purchase.float, 6)}</span> : null}
-    {purchase.paintSeed !== null ? <span>паттерн {purchase.paintSeed}</span> : null}
-  </p>
+const Chip = ({
+  children,
+  className,
+  title,
+}: {
+  children: ReactNode;
+  className?: string;
+  title?: string;
+}) => (
+  <span
+    title={title}
+    className={cn(
+      'bg-surface-muted text-foreground-muted numeric inline-flex h-6 items-center gap-1.5 rounded-full px-2 text-[0.6875rem]',
+      className,
+    )}
+  >
+    {children}
+  </span>
 );
 
-const LockBadge = ({ purchase, now }: { purchase: Purchase; now: number }) => {
+const Traits = ({
+  purchase,
+  valuation,
+  now,
+}: {
+  purchase: Purchase;
+  valuation: Valuation;
+  now: number;
+}) => {
+  const wear = parseItemName(purchase.name).wear;
   const left = lockLeft(purchase, now);
 
-  return left > 0 ? (
-    <span
-      className="bg-warning-soft text-warning inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[0.6875rem] font-medium"
-      title={`До ${formatDateTime(purchase.unlockAt)}`}
-    >
-      <Lock className="size-3" aria-hidden />
-      трейдбан ещё {formatLockLeft(left)}
-    </span>
-  ) : (
-    <span className="bg-gain-soft text-gain inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[0.6875rem] font-medium">
-      <CheckCircle2 className="size-3" aria-hidden />
-      можно продавать
-    </span>
+  return (
+    <div className="flex flex-wrap items-center gap-1.5">
+      {wear && purchase.float !== null ? (
+        <Chip title={`Флоат ${purchase.float}`}>
+          <FloatBar value={purchase.float} zoom={WEAR_RANGES[wear]} className="w-10" />
+          {purchase.float.toFixed(4)}
+        </Chip>
+      ) : null}
+      {wear && purchase.paintSeed !== null ? <Chip>#{purchase.paintSeed}</Chip> : null}
+      {valuation.stickers.length > 0 ? (
+        <Chip title={purchase.stickers.map(stickerLabel).join(', ')}>
+          <span className="flex -space-x-1">
+            {valuation.stickers.map((sticker, index) =>
+              sticker.image ? (
+                <img
+                  key={`${sticker.name}-${index}`}
+                  src={sticker.image}
+                  alt=""
+                  className="size-4 object-contain"
+                />
+              ) : null,
+            )}
+          </span>
+          {purchase.stickers.length}{' '}
+          {plural(purchase.stickers.length, ['наклейка', 'наклейки', 'наклеек'])}
+        </Chip>
+      ) : null}
+      {left > 0 ? (
+        <Chip
+          className="bg-warning-soft text-warning"
+          title={`До ${formatDateTime(purchase.unlockAt)}`}
+        >
+          <Lock className="size-3" aria-hidden />
+          {formatLockLeft(left)}
+        </Chip>
+      ) : (
+        <Chip className="bg-gain-soft text-gain">
+          <CheckCircle2 className="size-3" aria-hidden />
+          можно продавать
+        </Chip>
+      )}
+    </div>
+  );
+};
+
+const Decision = ({
+  purchase,
+  valuation,
+  pending,
+}: {
+  purchase: Purchase;
+  valuation: Valuation;
+  pending: boolean;
+}) => {
+  const find = (kind: PriceOption['kind']) =>
+    valuation.options.find((option) => option.kind === kind);
+  const recommended = find('recommended');
+  const quick = find('quick');
+  const max = find('max');
+  const cost = purchase.price * purchase.amount;
+
+  return (
+    <div className="min-w-0 space-y-2">
+      <div className="flex items-end gap-3 sm:gap-4">
+        <div className="min-w-0">
+          <p className="text-foreground-subtle text-[0.6875rem]">Купил</p>
+          <p className="numeric text-lg font-semibold">{formatUsd(cost)}</p>
+          <p className="text-foreground-subtle flex items-center gap-1 text-[0.6875rem]">
+            <span className={cn('size-1.5 rounded-full', purchaseMarketDot(purchase.market))} />
+            {purchaseMarketName(purchase.market)} · {shortDate.format(new Date(purchase.boughtAt))}
+          </p>
+        </div>
+        <ArrowRight className="text-foreground-subtle mb-5 size-4 shrink-0" aria-hidden />
+        {recommended ? (
+          <div className="min-w-0">
+            <p className="text-foreground-subtle flex items-center gap-1 text-[0.6875rem]">
+              <span className={cn('size-1.5 rounded-full', MARKETS[recommended.market].dot)} />
+              Выставить на {MARKETS[recommended.market].name}
+            </p>
+            <p className="numeric text-2xl leading-tight font-semibold tracking-tight">
+              {formatUsd(recommended.price * purchase.amount)}
+            </p>
+            <p className="flex flex-wrap items-center gap-1.5 text-[0.6875rem]">
+              <span className="text-foreground-subtle numeric">
+                на руки {formatUsd(recommended.payout * purchase.amount)}
+              </span>
+              <ProfitPill profit={recommended.profit * purchase.amount} cost={cost} />
+            </p>
+          </div>
+        ) : (
+          <p className="text-foreground-subtle mb-5 text-sm">
+            {pending ? 'Загружаем цены' : 'Нет цен'}
+          </p>
+        )}
+      </div>
+      {quick || max ? (
+        <p className="text-foreground-muted numeric flex flex-wrap gap-x-3 gap-y-1 text-[0.75rem]">
+          {quick ? (
+            <span>
+              Сразу {formatUsd(quick.price * purchase.amount)} на {MARKETS[quick.market].short}{' '}
+              <span className={quick.profit >= 0 ? 'text-gain' : 'text-loss'}>
+                {formatSignedUsd(quick.profit * purchase.amount)}
+              </span>
+            </span>
+          ) : null}
+          {max ? (
+            <span>
+              Максимум {formatUsd(max.price * purchase.amount)}{' '}
+              <span className={max.profit >= 0 ? 'text-gain' : 'text-loss'}>
+                {formatSignedUsd(max.profit * purchase.amount)}
+              </span>
+            </span>
+          ) : null}
+        </p>
+      ) : null}
+    </div>
   );
 };
 
@@ -123,113 +228,130 @@ export const PurchaseRow = ({
   onOpen,
 }: PurchaseRowProps) => {
   const form = usePurchaseForm();
+  const [open, setOpen] = useState(false);
   const valuation = usePurchaseValuation(purchase, item, fees, withdrawals);
   const priced = item ? withPremium(item, valuation.total.mid) : undefined;
   const options = priced ? sellOptions(priced, purchase.price, fees, withdrawals) : [];
   const best = bestOption(options);
   const advice = item ? sellAdvice(best, marketPrice(item), item.sales) : null;
-  const listing = (market: SellMarketId) =>
-    options.find((option) => option.market === market && option.kind === 'listing');
-  const instant = options.find((option) => option.kind === 'instant');
-  const isBest = (option: SellOption | undefined) =>
-    !!option && option.market === best?.market && option.kind === best?.kind;
+  const breakEven = (market: SellMarketId) =>
+    breakEvenPrice(purchase.price, market, fees, withdrawals);
+  const recommended = valuation.options.find((option) => option.kind === 'recommended');
 
   return (
-    <article className="bg-surface relative flex flex-col gap-3 rounded-3xl p-3 shadow-[var(--shadow-card)]">
-      <button
-        type="button"
-        onClick={() => onOpen(purchase.name)}
-        className="absolute inset-0 z-0 rounded-3xl"
-        aria-label={`Подробнее: ${purchase.name}`}
-      />
-      <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
-        <div className="pointer-events-none relative flex min-w-0 items-center gap-3 lg:w-80 lg:shrink-0">
-          <ItemImage
-            src={purchase.image ?? item?.image ?? null}
-            alt={purchase.name}
-            rarityColor={purchase.rarityColor ?? item?.rarityColor ?? null}
-            className="size-20 shrink-0"
-            imageClassName="p-1.5"
-          />
-          <div className="min-w-0">
-            <ItemTitle name={purchase.name} />
-            <Meta purchase={purchase} />
-            <div className="mt-1.5">
-              <LockBadge purchase={purchase} now={now} />
-            </div>
+    <article className="bg-surface overflow-hidden rounded-3xl shadow-[var(--shadow-card)]">
+      <div className="grid gap-4 p-4 sm:p-5 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)_auto] lg:items-center lg:gap-6">
+        <div className="flex min-w-0 items-center gap-4">
+          <button
+            type="button"
+            onClick={() => onOpen(purchase.name)}
+            aria-label={`Подробнее: ${purchase.name}`}
+            className="press shrink-0"
+          >
+            <ItemImage
+              src={purchase.image ?? item?.image ?? null}
+              alt={purchase.name}
+              rarityColor={purchase.rarityColor ?? item?.rarityColor ?? null}
+              className="size-20 sm:size-24"
+              imageClassName="p-2"
+            />
+          </button>
+          <div className="min-w-0 space-y-2">
+            <button
+              type="button"
+              onClick={() => onOpen(purchase.name)}
+              className="block min-w-0 text-left"
+            >
+              <ItemTitle name={purchase.name} />
+            </button>
+            <Traits purchase={purchase} valuation={valuation} now={now} />
           </div>
         </div>
 
-        <div className="pointer-events-none relative grid flex-1 grid-cols-2 gap-2 sm:grid-cols-4">
-          {SELL_MARKET_ORDER.map((market) => (
-            <Cell
-              key={market}
-              label={MARKETS[market].short}
-              dot={MARKETS[market].dot}
-              option={listing(market)}
-              best={isBest(listing(market))}
-              amount={purchase.amount}
-              detail={`безубыток ${formatUsd(breakEvenPrice(purchase.price, market, fees, withdrawals))}`}
-            />
-          ))}
-          <Cell
-            label="Заявка DMarket"
-            dot={MARKETS.dmarket.dot}
-            option={instant}
-            best={isBest(instant)}
-            amount={purchase.amount}
-            detail={instant ? `на руки ${formatUsd(instant.payout * purchase.amount)}` : ''}
-          />
-        </div>
-      </div>
+        <Decision purchase={purchase} valuation={valuation} pending={!item || valuation.loading} />
 
-      <PriceStrip valuation={valuation} amount={purchase.amount} />
-
-      <div className="relative flex flex-col gap-2 sm:flex-row sm:items-center">
-        {advice ? (
-          <p
-            className={cn(
-              'pointer-events-none flex-1 rounded-xl px-3 py-2 text-[0.8125rem] font-medium',
-              ADVICE_TONES[advice.tone],
-            )}
-          >
-            {advice.text}
-            {best ? ` (${formatPercent(best.percent, true)})` : ''}
-          </p>
-        ) : (
-          <p className="text-foreground-subtle pointer-events-none flex-1 px-1 text-[0.8125rem]">
-            Загружаем цены
-          </p>
-        )}
-        {purchase.note ? (
-          <p className="text-foreground-muted pointer-events-none px-1 text-[0.8125rem] sm:max-w-xs sm:truncate">
-            {purchase.note}
-          </p>
-        ) : null}
-        <div className="z-10 flex gap-2">
+        <div className="flex items-center gap-2 lg:flex-col lg:items-stretch">
           <Button
             variant="secondary"
             size="sm"
+            className="flex-1 lg:flex-none"
             onClick={() =>
               form.sell(
                 purchase,
-                best ? { market: best.market, received: best.payout * purchase.amount } : undefined,
+                recommended
+                  ? { market: recommended.market, received: recommended.payout * purchase.amount }
+                  : undefined,
               )
             }
           >
             Продал
           </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            aria-label="Изменить"
-            title="Изменить"
-            onClick={() => form.edit(purchase)}
-          >
-            <Pencil className="size-4" aria-hidden />
-          </Button>
+          <div className="flex gap-1">
+            <Button
+              variant="ghost"
+              size="sm"
+              aria-label="Изменить"
+              title="Изменить"
+              onClick={() => form.edit(purchase)}
+            >
+              <Pencil className="size-4" aria-hidden />
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              aria-expanded={open}
+              aria-label="Все площадки"
+              title="Все площадки"
+              onClick={() => setOpen(!open)}
+            >
+              <ChevronDown
+                className={cn('size-4 transition-transform', open ? 'rotate-180' : '')}
+                aria-hidden
+              />
+            </Button>
+          </div>
         </div>
       </div>
+
+      {advice || valuation.parts.length > 0 || purchase.note ? (
+        <div className="border-border flex flex-wrap items-center gap-x-4 gap-y-1.5 border-t px-4 py-2.5 text-[0.75rem] sm:px-5">
+          {advice ? (
+            <span className="text-foreground-muted flex items-center gap-2">
+              <span
+                className={cn('size-1.5 shrink-0 rounded-full', ADVICE_DOTS[advice.tone])}
+                aria-hidden
+              />
+              {advice.text}
+            </span>
+          ) : null}
+          {purchase.note ? (
+            <span className="text-foreground-subtle max-w-xs truncate italic" title={purchase.note}>
+              {purchase.note}
+            </span>
+          ) : null}
+          {valuation.parts.length > 0 ? (
+            <span className="flex flex-wrap gap-1.5 sm:ml-auto">
+              {valuation.parts.map((part) => (
+                <Chip key={part.key}>
+                  {part.label} <span className="text-gain">{formatSignedUsd(part.range.mid)}</span>
+                </Chip>
+              ))}
+            </span>
+          ) : null}
+        </div>
+      ) : null}
+
+      {open ? (
+        <div className="border-border bg-surface-muted/40 space-y-4 border-t px-4 py-4 sm:px-5">
+          <MarketTable
+            options={options}
+            best={best}
+            amount={purchase.amount}
+            breakEven={breakEven}
+          />
+          <ValueDetails valuation={valuation} />
+        </div>
+      ) : null}
     </article>
   );
 };
@@ -248,49 +370,54 @@ export const SoldRow = ({
   const held = daysBetween(purchase.boughtAt, sale.soldAt);
 
   return (
-    <article className="bg-surface relative flex flex-col gap-3 rounded-3xl p-3 shadow-[var(--shadow-card)] sm:flex-row sm:items-center">
-      <button
-        type="button"
-        onClick={() => onOpen(purchase.name)}
-        className="absolute inset-0 z-0 rounded-3xl"
-        aria-label={`Подробнее: ${purchase.name}`}
-      />
-      <div className="pointer-events-none relative flex min-w-0 flex-1 items-center gap-3">
-        <ItemImage
-          src={purchase.image}
-          alt={purchase.name}
-          rarityColor={purchase.rarityColor}
-          className="size-16 shrink-0"
-          imageClassName="p-1.5"
-        />
-        <div className="min-w-0">
+    <article className="bg-surface grid gap-4 rounded-3xl p-4 shadow-[var(--shadow-card)] sm:p-5 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)_auto] lg:items-center lg:gap-6">
+      <div className="flex min-w-0 items-center gap-4">
+        <button
+          type="button"
+          onClick={() => onOpen(purchase.name)}
+          className="press shrink-0"
+          aria-label={`Подробнее: ${purchase.name}`}
+        >
+          <ItemImage
+            src={purchase.image}
+            alt={purchase.name}
+            rarityColor={purchase.rarityColor}
+            className="size-16"
+            imageClassName="p-1.5"
+          />
+        </button>
+        <div className="min-w-0 space-y-1">
           <ItemTitle name={purchase.name} />
-          <Meta purchase={purchase} />
+          <p className="text-foreground-subtle text-[0.6875rem]">
+            держал {held} {plural(held, ['день', 'дня', 'дней'])}
+          </p>
         </div>
       </div>
-      <div className="pointer-events-none relative text-sm sm:text-right">
-        <p className="numeric">
-          продано за {formatUsd(sale.received)} на {purchaseMarketName(sale.market)}
-        </p>
-        <p className="text-foreground-subtle numeric text-xs">
-          {formatDate(sale.soldAt)}, держал {held} {plural(held, ['день', 'дня', 'дней'])}
-        </p>
-      </div>
-      <p
-        className={cn(
-          'numeric pointer-events-none relative text-lg font-semibold sm:w-32 sm:text-right',
-          profit >= 0 ? 'text-gain' : 'text-loss',
-        )}
-      >
-        {formatSignedUsd(profit)}
-        <span className="block text-xs font-normal">
-          {cost > 0 ? formatPercent((profit / cost) * 100, true) : ''}
+
+      <div className="flex items-end gap-4">
+        <div>
+          <p className="text-foreground-subtle text-[0.6875rem]">Купил</p>
+          <p className="numeric text-lg font-semibold">{formatUsd(cost)}</p>
+          <p className="text-foreground-subtle text-[0.6875rem]">
+            {purchaseMarketName(purchase.market)} · {shortDate.format(new Date(purchase.boughtAt))}
+          </p>
+        </div>
+        <ArrowRight className="text-foreground-subtle mb-5 size-4 shrink-0" aria-hidden />
+        <div>
+          <p className="text-foreground-subtle text-[0.6875rem]">Получил</p>
+          <p className="numeric text-lg font-semibold">{formatUsd(sale.received)}</p>
+          <p className="text-foreground-subtle text-[0.6875rem]">
+            {purchaseMarketName(sale.market)} · {shortDate.format(new Date(sale.soldAt))}
+          </p>
+        </div>
+        <span className="mb-5">
+          <ProfitPill profit={profit} cost={cost} />
         </span>
-      </p>
+      </div>
+
       <Button
         variant="ghost"
         size="sm"
-        className="relative z-10 self-end sm:self-center"
         aria-label="Изменить продажу"
         title="Изменить продажу"
         onClick={() => form.sell(purchase)}
