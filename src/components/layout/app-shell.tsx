@@ -1,6 +1,16 @@
 'use client';
 
-import { BookOpen, Flame, Gauge, Heart, Search, Settings, Sparkles, Sticker } from 'lucide-react';
+import {
+  Backpack,
+  BookOpen,
+  Flame,
+  Gauge,
+  Heart,
+  Search,
+  Settings,
+  Sparkles,
+  Sticker,
+} from 'lucide-react';
 import type { Route } from 'next';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -18,15 +28,24 @@ interface NavItem {
   icon: ComponentType<{ className?: string }>;
 }
 
-const NAV_ITEMS: NavItem[] = [
+const MAIN_NAV: NavItem[] = [
   { href: '/', label: 'Выгодно', icon: Sparkles },
   { href: '/top', label: 'Топ', icon: Flame },
   { href: '/search', label: 'Поиск', icon: Search },
   { href: '/library' as Route, label: 'Библиотека', icon: BookOpen },
   { href: '/float', label: 'Флоат', icon: Gauge },
   { href: '/stickers', label: 'Наклейки', icon: Sticker },
-  { href: '/favorites', label: 'Избранное', icon: Heart },
 ];
+
+const PERSONAL_NAV: NavItem[] = [
+  { href: '/favorites', label: 'Избранное', icon: Heart },
+  { href: '/inventory' as Route, label: 'Инвентарь', icon: Backpack },
+];
+
+const NAV_ITEMS = [...MAIN_NAV, ...PERSONAL_NAV];
+
+const iconButton =
+  'press bg-surface text-foreground-muted hover:text-foreground flex size-9 items-center justify-center rounded-full shadow-[var(--shadow-soft)]';
 
 const isActive = (pathname: string, href: string): boolean =>
   href === '/' ? pathname === '/' : pathname.startsWith(href);
@@ -41,9 +60,9 @@ export const AppShell = ({ children }: { children: ReactNode }) => {
         <div className="mx-auto flex h-16 w-full max-w-7xl items-center gap-6 px-4 sm:px-6">
           <Logo />
 
-          <nav aria-label="Разделы" className="hidden flex-1 lg:block">
+          <nav aria-label="Разделы" className="hidden min-w-0 flex-1 lg:block">
             <ul className="flex items-center gap-1">
-              {NAV_ITEMS.map(({ href, label, icon: Icon }) => {
+              {MAIN_NAV.map(({ href, label, icon: Icon }) => {
                 const active = isActive(pathname, href);
 
                 return (
@@ -51,15 +70,16 @@ export const AppShell = ({ children }: { children: ReactNode }) => {
                     <Link
                       href={href}
                       aria-current={active ? 'page' : undefined}
+                      title={label}
                       className={cn(
-                        'press flex h-9 items-center gap-2 rounded-full px-3.5 text-sm font-medium',
+                        'press flex h-9 items-center gap-2 rounded-full px-3 text-sm font-medium whitespace-nowrap',
                         active
                           ? 'bg-surface text-foreground shadow-[var(--shadow-soft)]'
                           : 'text-foreground-muted hover:text-foreground',
                       )}
                     >
-                      <Icon className="size-4" aria-hidden />
-                      {label}
+                      <Icon className="size-4 shrink-0" aria-hidden />
+                      <span className={active ? undefined : 'sr-only xl:not-sr-only'}>{label}</span>
                     </Link>
                   </li>
                 );
@@ -69,12 +89,28 @@ export const AppShell = ({ children }: { children: ReactNode }) => {
 
           <div className="ml-auto flex items-center gap-2">
             <StatusPill className="hidden sm:inline-flex" />
+            {PERSONAL_NAV.map(({ href, label, icon: Icon }) => {
+              const active = isActive(pathname, href);
+
+              return (
+                <Link
+                  key={href}
+                  href={href}
+                  aria-label={label}
+                  aria-current={active ? 'page' : undefined}
+                  title={label}
+                  className={cn(iconButton, 'hidden lg:flex', active ? 'text-foreground' : '')}
+                >
+                  <Icon className="size-[1.125rem]" aria-hidden />
+                </Link>
+              );
+            })}
             <button
               type="button"
               onClick={() => setSettingsOpen(true)}
               aria-label="Настройки"
               title="Настройки"
-              className="press bg-surface text-foreground-muted hover:text-foreground flex size-9 items-center justify-center rounded-full shadow-[var(--shadow-soft)]"
+              className={iconButton}
             >
               <Settings className="size-[1.125rem]" aria-hidden />
             </button>
