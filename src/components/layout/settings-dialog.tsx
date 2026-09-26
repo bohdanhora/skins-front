@@ -8,10 +8,16 @@ import { Button } from '@/components/ui/button';
 import { Dialog } from '@/components/ui/dialog';
 import { Segmented } from '@/components/ui/segmented';
 import { useStatus } from '@/lib/api/queries';
-import type { MarketId } from '@/lib/api/types';
+import type { SellMarketId } from '@/lib/api/types';
 import { timeAgo } from '@/lib/format/time';
-import { MARKETS, MARKET_ORDER } from '@/lib/markets';
-import { DEFAULT_FEES, useFeesSetting, type Fees } from '@/lib/storage/settings';
+import { MARKETS, MARKET_ORDER, SELL_MARKET_ORDER } from '@/lib/markets';
+import {
+  DEFAULT_FEES,
+  DEFAULT_WITHDRAWALS,
+  useFeesSetting,
+  useWithdrawalsSetting,
+  type Fees,
+} from '@/lib/storage/settings';
 import { cn } from '@/lib/utils/cn';
 
 interface SettingsDialogProps {
@@ -19,44 +25,112 @@ interface SettingsDialogProps {
   onOpenChange: (open: boolean) => void;
 }
 
-const FEE_HINTS: Record<MarketId, string> = {
+const FEE_HINTS: Record<SellMarketId, string> = {
   whiteMarket: 'Обычно 5%',
   dmarket: 'От 2% до 10%, зависит от предмета',
   csfloat: 'Обычно 2%',
 };
 
+const WITHDRAWAL_HINTS: Record<SellMarketId, string> = {
+  whiteMarket: 'Крипта через WhiteBIT 0%, карта 1-3%',
+  dmarket: 'Своей нет, платёжка берёт около 1,5-2%',
+  csfloat: 'От 2,5% до 0,5%, падает с объёмом продаж',
+};
+
 const MAX_FEE = 50;
 
-export const SettingsDialog = ({ open, onOpenChange }: SettingsDialogProps) => {
-  const [fees, setFees] = useFeesSetting();
-  const [draft, setDraft] = useState<Record<MarketId, string>>({
+interface FeeFieldsProps {
+  title: string;
+  description: string;
+  hints: Record<SellMarketId, string>;
+  value: Fees;
+  defaults: Fees;
+  open: boolean;
+  onChange: (next: Fees) => void;
+}
+
+const FeeFields = ({
+  title,
+  description,
+  hints,
+  value,
+  defaults,
+  open,
+  onChange,
+}: FeeFieldsProps) => {
+  const [draft, setDraft] = useState<Record<SellMarketId, string>>({
     whiteMarket: '',
     dmarket: '',
     csfloat: '',
   });
-  const { theme = 'system', setTheme } = useTheme();
-  const status = useStatus();
 
   useEffect(() => {
     if (open) {
       setDraft({
-        whiteMarket: String(fees.whiteMarket),
-        dmarket: String(fees.dmarket),
-        csfloat: String(fees.csfloat),
+        whiteMarket: String(value.whiteMarket),
+        dmarket: String(value.dmarket),
+        csfloat: String(value.csfloat),
       });
     }
-  }, [open, fees]);
+  }, [open, value]);
 
-  const commit = (market: MarketId, raw: string) => {
-    const value = Number(raw.replace(',', '.'));
+  const commit = (market: SellMarketId, raw: string) => {
+    const parsed = Number(raw.replace(',', '.'));
     const next: Fees = {
-      ...fees,
-      [market]: Number.isFinite(value) ? Math.min(Math.max(value, 0), MAX_FEE) : fees[market],
+      ...value,
+      [market]: Number.isFinite(parsed) ? Math.min(Math.max(parsed, 0), MAX_FEE) : value[market],
     };
 
-    setFees(next);
+    onChange(next);
     setDraft((current) => ({ ...current, [market]: String(next[market]) }));
   };
+
+  return (
+    <section className="space-y-3">
+      <div>
+        <h3 className="text-sm font-semibold">{title}</h3>
+        <p className="text-foreground-muted mt-0.5 text-sm">{description}</p>
+      </div>
+      <div className="grid gap-3 sm:grid-cols-3">
+        {SELL_MARKET_ORDER.map((market) => (
+          <label key={market} className="border-border block rounded-2xl border p-3.5">
+            <span className="flex items-center gap-2 text-sm font-medium">
+              <span className={cn('size-2 rounded-full', MARKETS[market].dot)} aria-hidden />
+              {MARKETS[market].name}
+            </span>
+            <span className="mt-2 flex items-center gap-2">
+              <input
+                inputMode="decimal"
+                value={draft[market]}
+                onChange={(event) =>
+                  setDraft((current) => ({
+                    ...current,
+                    [market]: event.target.value.replace(/[^\d.,]/g, ''),
+                  }))
+                }
+                onBlur={(event) => commit(market, event.target.value)}
+                className="border-border-strong bg-surface focus-visible:border-accent numeric h-10 w-20 rounded-xl border px-3 text-sm focus-visible:outline-none"
+              />
+              <span className="text-foreground-muted text-sm">%</span>
+            </span>
+            <span className="text-foreground-subtle mt-2 block text-xs">{hints[market]}</span>
+          </label>
+        ))}
+      </div>
+      {SELL_MARKET_ORDER.some((market) => value[market] !== defaults[market]) ? (
+        <Button variant="ghost" size="sm" onClick={() => onChange(defaults)}>
+          Вернуть как было
+        </Button>
+      ) : null}
+    </section>
+  );
+};
+
+export const SettingsDialog = ({ open, onOpenChange }: SettingsDialogProps) => {
+  const [fees, setFees] = useFeesSetting();
+  const [withdrawals, setWithdrawals] = useWithdrawalsSetting();
+  const { theme = 'system', setTheme } = useTheme();
+  const status = useStatus();
 
   return (
     <Dialog
@@ -66,49 +140,25 @@ export const SettingsDialog = ({ open, onOpenChange }: SettingsDialogProps) => {
       description="Сохраняются в этом браузере."
     >
       <div className="space-y-7">
-        <section className="space-y-3">
-          <div>
-            <h3 className="text-sm font-semibold">Комиссия при продаже</h3>
-            <p className="text-foreground-muted mt-0.5 text-sm">
-              Нужна, чтобы честно считать прибыль от перепродажи.
-            </p>
-          </div>
-          <div className="grid gap-3 sm:grid-cols-3">
-            {MARKET_ORDER.map((market) => (
-              <label key={market} className="border-border block rounded-2xl border p-3.5">
-                <span className="flex items-center gap-2 text-sm font-medium">
-                  <span className={cn('size-2 rounded-full', MARKETS[market].dot)} aria-hidden />
-                  {MARKETS[market].name}
-                </span>
-                <span className="mt-2 flex items-center gap-2">
-                  <input
-                    inputMode="decimal"
-                    value={draft[market]}
-                    onChange={(event) =>
-                      setDraft((current) => ({
-                        ...current,
-                        [market]: event.target.value.replace(/[^\d.,]/g, ''),
-                      }))
-                    }
-                    onBlur={(event) => commit(market, event.target.value)}
-                    className="border-border-strong bg-surface focus-visible:border-accent numeric h-10 w-20 rounded-xl border px-3 text-sm focus-visible:outline-none"
-                  />
-                  <span className="text-foreground-muted text-sm">%</span>
-                </span>
-                <span className="text-foreground-subtle mt-2 block text-xs">
-                  {FEE_HINTS[market]}
-                </span>
-              </label>
-            ))}
-          </div>
-          {fees.whiteMarket !== DEFAULT_FEES.whiteMarket ||
-          fees.dmarket !== DEFAULT_FEES.dmarket ||
-          fees.csfloat !== DEFAULT_FEES.csfloat ? (
-            <Button variant="ghost" size="sm" onClick={() => setFees(DEFAULT_FEES)}>
-              Вернуть как было
-            </Button>
-          ) : null}
-        </section>
+        <FeeFields
+          title="Комиссия при продаже"
+          description="Нужна, чтобы честно считать прибыль от перепродажи."
+          hints={FEE_HINTS}
+          value={fees}
+          defaults={DEFAULT_FEES}
+          open={open}
+          onChange={setFees}
+        />
+
+        <FeeFields
+          title="Комиссия на вывод"
+          description="Сколько теряется, когда выводишь деньги с площадки. Учитывается в оценке инвентаря."
+          hints={WITHDRAWAL_HINTS}
+          value={withdrawals}
+          defaults={DEFAULT_WITHDRAWALS}
+          open={open}
+          onChange={setWithdrawals}
+        />
 
         <section className="space-y-3">
           <h3 className="text-sm font-semibold">Тема</h3>
@@ -134,6 +184,10 @@ export const SettingsDialog = ({ open, onOpenChange }: SettingsDialogProps) => {
             <ul className="divide-border border-border divide-y rounded-2xl border">
               {MARKET_ORDER.map((market) => {
                 const state = status.data[market];
+
+                if (!state) {
+                  return null;
+                }
 
                 return (
                   <li key={market} className="flex items-center gap-3 px-4 py-3">
