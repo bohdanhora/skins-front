@@ -3,6 +3,7 @@
 import { ExternalLink, KeyRound, Zap } from 'lucide-react';
 import { useState } from 'react';
 
+import { useRememberedState } from '@/hooks/use-remembered-state';
 import { Segmented } from '@/components/ui/segmented';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useFloatSearch } from '@/lib/api/queries';
@@ -32,7 +33,7 @@ interface FloatResultsProps {
 
 export const FloatResults = ({ name, range, zoom }: FloatResultsProps) => {
   const search = useFloatSearch({ name, floatFrom: range.from, floatTo: range.to });
-  const [order, setOrder] = useState<Order>('price');
+  const [order, setOrder] = useRememberedState<Order>('floatResults.order', 'price');
   const [source, setSource] = useState<Source>('all');
 
   if (search.isPending) {

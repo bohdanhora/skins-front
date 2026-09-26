@@ -1,7 +1,6 @@
 'use client';
 
 import { SearchX } from 'lucide-react';
-import { useState } from 'react';
 
 import {
   CategoryChips,
@@ -11,6 +10,7 @@ import {
   SearchField,
   Toggle,
 } from '@/components/items/filters';
+import { useRememberedState } from '@/hooks/use-remembered-state';
 import { ItemGrid } from '@/components/items/item-grid';
 import { EmptyState } from '@/components/states/empty-state';
 import { Segmented } from '@/components/ui/segmented';
@@ -45,19 +45,28 @@ const SORTS: { value: ItemSort; label: string }[] = [
 ];
 
 const DealsPage = () => {
-  const [mode, setMode] = useState<Mode>('gap');
-  const [q, setQ] = useState('');
-  const [category, setCategory] = useState<ItemCategory | undefined>();
-  const [subcategory, setSubcategory] = useState<string | undefined>();
-  const [minPrice, setMinPrice] = useState('1');
-  const [maxPrice, setMaxPrice] = useState('');
-  const [liquidOnly, setLiquidOnly] = useState(true);
-  const [sort, setSort] = useState<ItemSort>('benefit');
-  const [wear, setWear] = useState<'all' | ItemWear>('all');
-  const [edition, setEdition] = useState<'all' | ItemEdition>('all');
-  const [phase, setPhase] = useState<'all' | MarketPhase>('all');
-  const [cheapestOn, setCheapestOn] = useState<'all' | MarketId>('all');
-  const [collection, setCollection] = useState('');
+  const [mode, setMode] = useRememberedState<Mode>('deals.mode', 'gap');
+  const [q, setQ] = useRememberedState('deals.q', '');
+  const [category, setCategory] = useRememberedState<ItemCategory | undefined>(
+    'deals.category',
+    undefined,
+  );
+  const [subcategory, setSubcategory] = useRememberedState<string | undefined>(
+    'deals.subcategory',
+    undefined,
+  );
+  const [minPrice, setMinPrice] = useRememberedState('deals.minPrice', '1');
+  const [maxPrice, setMaxPrice] = useRememberedState('deals.maxPrice', '');
+  const [liquidOnly, setLiquidOnly] = useRememberedState('deals.liquidOnly', true);
+  const [sort, setSort] = useRememberedState<ItemSort>('deals.sort', 'benefit');
+  const [wear, setWear] = useRememberedState<'all' | ItemWear>('deals.wear', 'all');
+  const [edition, setEdition] = useRememberedState<'all' | ItemEdition>('deals.edition', 'all');
+  const [phase, setPhase] = useRememberedState<'all' | MarketPhase>('deals.phase', 'all');
+  const [cheapestOn, setCheapestOn] = useRememberedState<'all' | MarketId>(
+    'deals.cheapestOn',
+    'all',
+  );
+  const [collection, setCollection] = useRememberedState('deals.collection', '');
 
   const status = useStatus();
   const search = useDebouncedValue(q);

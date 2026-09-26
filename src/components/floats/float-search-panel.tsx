@@ -5,6 +5,8 @@ import type { Route } from 'next';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
+import { rememberValue } from '@/hooks/use-remembered-state';
+
 import { FloatResults } from '@/components/floats/float-results';
 import { FilterBar } from '@/components/items/filters';
 import { ItemImage } from '@/components/items/item-image';
@@ -26,6 +28,8 @@ import {
 } from '@/lib/format/float';
 import { formatUsd } from '@/lib/format/money';
 import { parseItemName, type Wear } from '@/lib/format/item-name';
+
+export const FLOAT_SEARCH_KEY = 'float.search';
 
 export interface FloatSearchStart {
   name: string | null;
@@ -64,8 +68,9 @@ export const FloatSearchPanel = ({ initial }: { initial: FloatSearchStart }) => 
 
     const search = query.toString();
 
+    rememberValue<FloatSearchStart>(FLOAT_SEARCH_KEY, { name, from, to });
     router.replace((search ? `/float?${search}` : '/float?tab=search') as Route, { scroll: false });
-  }, [name, floatFrom, floatTo, router]);
+  }, [name, from, to, floatFrom, floatTo, router]);
 
   const applyRange = (range: FloatRange | null) => {
     setFrom(range ? String(range[0]) : '');

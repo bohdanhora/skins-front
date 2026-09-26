@@ -1,7 +1,6 @@
 'use client';
 
 import { Loader2, SearchX } from 'lucide-react';
-import { useState } from 'react';
 
 import {
   CategoryChips,
@@ -11,6 +10,7 @@ import {
   SearchField,
   Toggle,
 } from '@/components/items/filters';
+import { useRememberedState } from '@/hooks/use-remembered-state';
 import { ItemGrid } from '@/components/items/item-grid';
 import { EmptyState } from '@/components/states/empty-state';
 import { Input, parseMoney } from '@/components/ui/input';
@@ -42,21 +42,27 @@ const SORTS: { value: ItemSort; label: string }[] = [
 ];
 
 const TopPage = () => {
-  const [q, setQ] = useState('');
-  const [category, setCategory] = useState<ItemCategory | undefined>();
-  const [subcategory, setSubcategory] = useState<string | undefined>();
-  const [minPrice, setMinPrice] = useState('1');
-  const [maxPrice, setMaxPrice] = useState('');
-  const [activeOnly, setActiveOnly] = useState(true);
-  const [closeBidOnly, setCloseBidOnly] = useState(false);
-  const [sort, setSort] = useState<ItemSort>('score');
-  const [wear, setWear] = useState<'all' | ItemWear>('all');
-  const [edition, setEdition] = useState<'all' | ItemEdition>('all');
-  const [phase, setPhase] = useState<'all' | MarketPhase>('all');
-  const [cheapestOn, setCheapestOn] = useState<'all' | MarketId>('all');
-  const [collection, setCollection] = useState('');
-  const [minEightWeekSales, setMinEightWeekSales] = useState('');
-  const [minBenefitPercent, setMinBenefitPercent] = useState('');
+  const [q, setQ] = useRememberedState('top.q', '');
+  const [category, setCategory] = useRememberedState<ItemCategory | undefined>(
+    'top.category',
+    undefined,
+  );
+  const [subcategory, setSubcategory] = useRememberedState<string | undefined>(
+    'top.subcategory',
+    undefined,
+  );
+  const [minPrice, setMinPrice] = useRememberedState('top.minPrice', '1');
+  const [maxPrice, setMaxPrice] = useRememberedState('top.maxPrice', '');
+  const [activeOnly, setActiveOnly] = useRememberedState('top.activeOnly', true);
+  const [closeBidOnly, setCloseBidOnly] = useRememberedState('top.closeBidOnly', false);
+  const [sort, setSort] = useRememberedState<ItemSort>('top.sort', 'score');
+  const [wear, setWear] = useRememberedState<'all' | ItemWear>('top.wear', 'all');
+  const [edition, setEdition] = useRememberedState<'all' | ItemEdition>('top.edition', 'all');
+  const [phase, setPhase] = useRememberedState<'all' | MarketPhase>('top.phase', 'all');
+  const [cheapestOn, setCheapestOn] = useRememberedState<'all' | MarketId>('top.cheapestOn', 'all');
+  const [collection, setCollection] = useRememberedState('top.collection', '');
+  const [minEightWeekSales, setMinEightWeekSales] = useRememberedState('top.minEightWeekSales', '');
+  const [minBenefitPercent, setMinBenefitPercent] = useRememberedState('top.minBenefitPercent', '');
 
   const status = useStatus();
   const search = useDebouncedValue(q);

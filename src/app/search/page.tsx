@@ -3,7 +3,7 @@
 import { SearchX } from 'lucide-react';
 import type { Route } from 'next';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Suspense, useEffect, useState } from 'react';
+import { Suspense, useEffect } from 'react';
 
 import {
   CategoryChips,
@@ -12,6 +12,7 @@ import {
   PriceRange,
   SearchField,
 } from '@/components/items/filters';
+import { useRememberedState } from '@/hooks/use-remembered-state';
 import { GridSkeleton, ItemGrid } from '@/components/items/item-grid';
 import { EmptyState } from '@/components/states/empty-state';
 import { Chip } from '@/components/ui/chip';
@@ -43,17 +44,26 @@ const QUICK_SEARCHES = ['AK-47', 'AWP', 'Karambit', 'Butterfly', 'Glock-18', 'Ca
 const SearchPage = () => {
   const router = useRouter();
   const params = useSearchParams();
-  const [q, setQ] = useState(params.get('q') ?? '');
-  const [category, setCategory] = useState<ItemCategory | undefined>();
-  const [subcategory, setSubcategory] = useState<string | undefined>();
-  const [minPrice, setMinPrice] = useState('');
-  const [maxPrice, setMaxPrice] = useState('');
-  const [sort, setSort] = useState<ItemSort>('sales8w');
-  const [wear, setWear] = useState<'all' | ItemWear>('all');
-  const [edition, setEdition] = useState<'all' | ItemEdition>('all');
-  const [phase, setPhase] = useState<'all' | MarketPhase>('all');
-  const [cheapestOn, setCheapestOn] = useState<'all' | MarketId>('all');
-  const [collection, setCollection] = useState('');
+  const [q, setQ] = useRememberedState('search.q', () => params.get('q') ?? '');
+  const [category, setCategory] = useRememberedState<ItemCategory | undefined>(
+    'search.category',
+    undefined,
+  );
+  const [subcategory, setSubcategory] = useRememberedState<string | undefined>(
+    'search.subcategory',
+    undefined,
+  );
+  const [minPrice, setMinPrice] = useRememberedState('search.minPrice', '');
+  const [maxPrice, setMaxPrice] = useRememberedState('search.maxPrice', '');
+  const [sort, setSort] = useRememberedState<ItemSort>('search.sort', 'sales8w');
+  const [wear, setWear] = useRememberedState<'all' | ItemWear>('search.wear', 'all');
+  const [edition, setEdition] = useRememberedState<'all' | ItemEdition>('search.edition', 'all');
+  const [phase, setPhase] = useRememberedState<'all' | MarketPhase>('search.phase', 'all');
+  const [cheapestOn, setCheapestOn] = useRememberedState<'all' | MarketId>(
+    'search.cheapestOn',
+    'all',
+  );
+  const [collection, setCollection] = useRememberedState('search.collection', '');
 
   const search = useDebouncedValue(q);
   const priceFrom = useDebouncedValue(minPrice);

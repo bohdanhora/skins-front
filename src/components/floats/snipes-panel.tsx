@@ -1,8 +1,8 @@
 'use client';
 
 import { CloudOff, Crosshair, Loader2, ShieldAlert } from 'lucide-react';
-import { useState } from 'react';
 
+import { useRememberedState } from '@/hooks/use-remembered-state';
 import { FilterBar, PriceRange, SearchField, Toggle } from '@/components/items/filters';
 import { EmptyState } from '@/components/states/empty-state';
 import { Button } from '@/components/ui/button';
@@ -36,15 +36,18 @@ const SOURCES: { value: NonNullable<SnipesQuery['source']>; label: string }[] = 
 const GRID = 'grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3';
 
 export const SnipesPanel = ({ onCheck }: { onCheck: (snipe: Snipe) => void }) => {
-  const [q, setQ] = useState('');
-  const [minPrice, setMinPrice] = useState('');
-  const [maxPrice, setMaxPrice] = useState('');
-  const [specialOnly, setSpecialOnly] = useState(true);
-  const [source, setSource] = useState<NonNullable<SnipesQuery['source']>>('all');
-  const [sort, setSort] = useState<SnipeSort>('profit');
-  const [floatFrom, setFloatFrom] = useState('');
-  const [floatTo, setFloatTo] = useState('');
-  const [phase, setPhase] = useState<'all' | MarketPhase>('all');
+  const [q, setQ] = useRememberedState('snipes.q', '');
+  const [minPrice, setMinPrice] = useRememberedState('snipes.minPrice', '');
+  const [maxPrice, setMaxPrice] = useRememberedState('snipes.maxPrice', '');
+  const [specialOnly, setSpecialOnly] = useRememberedState('snipes.specialOnly', true);
+  const [source, setSource] = useRememberedState<NonNullable<SnipesQuery['source']>>(
+    'snipes.source',
+    'all',
+  );
+  const [sort, setSort] = useRememberedState<SnipeSort>('snipes.sort', 'profit');
+  const [floatFrom, setFloatFrom] = useRememberedState('snipes.floatFrom', '');
+  const [floatTo, setFloatTo] = useRememberedState('snipes.floatTo', '');
+  const [phase, setPhase] = useRememberedState<'all' | MarketPhase>('snipes.phase', 'all');
 
   const search = useDebouncedValue(q);
   const priceFrom = useDebouncedValue(minPrice);

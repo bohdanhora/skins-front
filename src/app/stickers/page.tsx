@@ -1,8 +1,8 @@
 'use client';
 
 import { KeyRound, SearchX, Sticker } from 'lucide-react';
-import { useState } from 'react';
 
+import { useRememberedState } from '@/hooks/use-remembered-state';
 import { FilterBar, PriceRange, SearchField } from '@/components/items/filters';
 import { ItemGrid } from '@/components/items/item-grid';
 import { ListingList } from '@/components/items/listing-list';
@@ -41,7 +41,7 @@ const SORTS: { value: ItemSort; label: string }[] = [
 ];
 
 const StickersPage = () => {
-  const [tab, setTab] = useState<Tab>('prices');
+  const [tab, setTab] = useRememberedState<Tab>('stickers.tab', 'prices');
 
   return (
     <div className="space-y-6">
@@ -69,8 +69,8 @@ const StickersPage = () => {
 };
 
 const StickerPrices = () => {
-  const [q, setQ] = useState('');
-  const [sort, setSort] = useState<ItemSort>('popular');
+  const [q, setQ] = useRememberedState('stickerPrices.q', '');
+  const [sort, setSort] = useRememberedState<ItemSort>('stickerPrices.sort', 'sales8w');
   const search = useDebouncedValue(q);
   const items = useItems({ category: 'sticker', q: search.trim() || undefined, sort });
 
@@ -110,11 +110,11 @@ const StickerPrices = () => {
 
 const SkinsWithStickers = () => {
   const status = useStatus();
-  const [stickers, setStickers] = useState<string[]>([]);
-  const [minPrice, setMinPrice] = useState('');
-  const [maxPrice, setMaxPrice] = useState('');
-  const [item, setItem] = useState('');
-  const [sort, setSort] = useState<StickerSkinsSort>('deal');
+  const [stickers, setStickers] = useRememberedState<string[]>('stickerSkins.stickers', []);
+  const [minPrice, setMinPrice] = useRememberedState('stickerSkins.minPrice', '');
+  const [maxPrice, setMaxPrice] = useRememberedState('stickerSkins.maxPrice', '');
+  const [item, setItem] = useRememberedState('stickerSkins.item', '');
+  const [sort, setSort] = useRememberedState<StickerSkinsSort>('stickerSkins.sort', 'deal');
   const priceFrom = useDebouncedValue(minPrice);
   const priceTo = useDebouncedValue(maxPrice);
   const itemText = useDebouncedValue(item).trim();

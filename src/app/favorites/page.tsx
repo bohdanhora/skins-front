@@ -2,8 +2,8 @@
 
 import { Heart } from 'lucide-react';
 import Link from 'next/link';
-import { useState } from 'react';
 
+import { useRememberedState } from '@/hooks/use-remembered-state';
 import { ItemGrid } from '@/components/items/item-grid';
 import { EmptyState } from '@/components/states/empty-state';
 import { Button } from '@/components/ui/button';
@@ -23,7 +23,7 @@ const SORTS: { value: ItemSort; label: string }[] = [
 
 const FavoritesPage = () => {
   const { favorites } = useFavorites();
-  const [sort, setSort] = useState<ItemSort>('name');
+  const [sort, setSort] = useRememberedState<ItemSort>('favorites.sort', 'name');
   const items = useItems({ names: favorites, sort }, { enabled: favorites.length > 0 });
 
   const empty = (

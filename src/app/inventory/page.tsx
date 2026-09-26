@@ -3,6 +3,7 @@
 import { Backpack, Loader2, RefreshCw, SearchX, UserRound } from 'lucide-react';
 import { useMemo, useState, type FormEvent } from 'react';
 
+import { useRememberedState } from '@/hooks/use-remembered-state';
 import { InventoryItemRow } from '@/components/inventory/inventory-item-row';
 import { InventorySummary } from '@/components/inventory/inventory-summary';
 import { useOpenItem } from '@/components/items/item-dialog-provider';
@@ -44,9 +45,9 @@ const InventoryPage = () => {
   const [profile, setProfile] = useSteamProfile();
   const [draft, setDraft] = useState<string | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
-  const [sort, setSort] = useState<InventorySort>('payoutDesc');
-  const [search, setSearch] = useState('');
-  const [sellableOnly, setSellableOnly] = useState(true);
+  const [sort, setSort] = useRememberedState<InventorySort>('inventory.sort', 'payoutDesc');
+  const [search, setSearch] = useRememberedState('inventory.search', '');
+  const [sellableOnly, setSellableOnly] = useRememberedState('inventory.sellableOnly', true);
   const openItem = useOpenItem();
   const inventory = useInventory(profile, refreshKey);
   const value = draft ?? profile;

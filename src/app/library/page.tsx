@@ -3,8 +3,9 @@
 import { ArrowRight, Search } from 'lucide-react';
 import type { Route } from 'next';
 import Link from 'next/link';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo } from 'react';
 
+import { useRememberedState } from '@/hooks/use-remembered-state';
 import { ItemImage } from '@/components/items/item-image';
 import { ItemTitle } from '@/components/items/item-title';
 import { EmptyState } from '@/components/states/empty-state';
@@ -57,10 +58,10 @@ const variantLabel = (variant: ItemLibraryVariant): string => {
 };
 
 const LibraryPage = () => {
-  const [category, setCategory] = useState<ItemCategory>('rifle');
-  const [weapon, setWeapon] = useState<string | null>(null);
-  const [skin, setSkin] = useState<string | null>(null);
-  const [search, setSearch] = useState('');
+  const [category, setCategory] = useRememberedState<ItemCategory>('library.category', 'rifle');
+  const [weapon, setWeapon] = useRememberedState<string | null>('library.weapon', null);
+  const [skin, setSkin] = useRememberedState<string | null>('library.skin', null);
+  const [search, setSearch] = useRememberedState('library.search', '');
   const library = useItemLibrary(category, weapon, null);
   const variants = useItemLibrary(category, weapon, skin, skin !== null);
 
@@ -68,7 +69,7 @@ const LibraryPage = () => {
     if (!weapon && library.data?.weapons[0]) {
       setWeapon(library.data.weapons[0].value);
     }
-  }, [library.data?.weapons, weapon]);
+  }, [library.data?.weapons, weapon, setWeapon]);
 
   const skins = useMemo(() => {
     const needle = search.trim().toLowerCase();

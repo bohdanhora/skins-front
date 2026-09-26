@@ -3,7 +3,13 @@
 import { useSearchParams } from 'next/navigation';
 import { Suspense, useState } from 'react';
 
-import { FloatSearchPanel, type FloatSearchStart } from '@/components/floats/float-search-panel';
+import { recallValue, rememberValue, useRememberedState } from '@/hooks/use-remembered-state';
+
+import {
+  FLOAT_SEARCH_KEY,
+  FloatSearchPanel,
+  type FloatSearchStart,
+} from '@/components/floats/float-search-panel';
 import { SnipesPanel } from '@/components/floats/snipes-panel';
 import { Segmented } from '@/components/ui/segmented';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -11,16 +17,27 @@ import type { Snipe } from '@/lib/api/types';
 
 type Tab = 'finds' | 'search';
 
+const TAB_KEY = 'float.tab';
+
 const FloatPage = () => {
   const params = useSearchParams();
-  const [tab, setTab] = useState<Tab>(
-    params.get('name') || params.get('tab') === 'search' ? 'search' : 'finds',
-  );
-  const [start, setStart] = useState<FloatSearchStart>({
-    name: params.get('name'),
-    from: params.get('from') ?? '',
-    to: params.get('to') ?? '',
+  const [start, setStart] = useState<FloatSearchStart>(() => {
+    if (params.get('name') !== null) {
+      rememberValue<Tab>(TAB_KEY, 'search');
+
+      return {
+        name: params.get('name'),
+        from: params.get('from') ?? '',
+        to: params.get('to') ?? '',
+      };
+    }
+
+    return recallValue<FloatSearchStart>(FLOAT_SEARCH_KEY) ?? { name: null, from: '', to: '' };
   });
+  const [tab, setTab] = useRememberedState<Tab>(
+    TAB_KEY,
+    params.get('tab') === 'search' ? 'search' : 'finds',
+  );
   const [searchKey, setSearchKey] = useState(0);
 
   const check = (snipe: Snipe) => {
