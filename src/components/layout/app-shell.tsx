@@ -1,18 +1,6 @@
 'use client';
 
-import {
-  Backpack,
-  BookOpen,
-  Flame,
-  FlaskConical,
-  Gauge,
-  Heart,
-  ReceiptText,
-  Search,
-  Settings,
-  Sparkles,
-  Sticker,
-} from 'lucide-react';
+import { BookOpen, Flame, FlaskConical, Gauge, Search, Sparkles, Sticker } from 'lucide-react';
 import type { Route } from 'next';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -40,17 +28,6 @@ const MAIN_NAV: NavItem[] = [
   { href: '/stickers', label: 'Наклейки', icon: Sticker },
   { href: '/craft' as Route, label: 'Крафт', icon: FlaskConical },
 ];
-
-const PERSONAL_NAV: NavItem[] = [
-  { href: '/favorites', label: 'Избранное', icon: Heart },
-  { href: '/inventory' as Route, label: 'Инвентарь', icon: Backpack },
-  { href: '/purchases' as Route, label: 'Покупки', icon: ReceiptText },
-];
-
-const NAV_ITEMS = [...MAIN_NAV, ...PERSONAL_NAV];
-
-const iconButton =
-  'press bg-surface text-foreground-muted hover:text-foreground flex size-9 items-center justify-center rounded-full shadow-[var(--shadow-soft)]';
 
 const isActive = (pathname: string, href: string): boolean =>
   href === '/' ? pathname === '/' : pathname.startsWith(href);
@@ -94,32 +71,7 @@ export const AppShell = ({ children }: { children: ReactNode }) => {
 
           <div className="ml-auto flex items-center gap-2">
             <StatusPill className="hidden sm:inline-flex" />
-            {PERSONAL_NAV.map(({ href, label, icon: Icon }) => {
-              const active = isActive(pathname, href);
-
-              return (
-                <Link
-                  key={href}
-                  href={href}
-                  aria-label={label}
-                  aria-current={active ? 'page' : undefined}
-                  title={label}
-                  className={cn(iconButton, 'hidden lg:flex', active ? 'text-foreground' : '')}
-                >
-                  <Icon className="size-[1.125rem]" aria-hidden />
-                </Link>
-              );
-            })}
-            <button
-              type="button"
-              onClick={() => setSettingsOpen(true)}
-              aria-label="Настройки"
-              title="Настройки"
-              className={iconButton}
-            >
-              <Settings className="size-[1.125rem]" aria-hidden />
-            </button>
-            <AccountMenu />
+            <AccountMenu onOpenSettings={() => setSettingsOpen(true)} />
           </div>
         </div>
       </header>
@@ -137,7 +89,7 @@ export const AppShell = ({ children }: { children: ReactNode }) => {
         className="bg-surface/90 border-border fixed inset-x-0 bottom-0 z-30 border-t pb-[env(safe-area-inset-bottom)] backdrop-blur-md lg:hidden"
       >
         <ul className="flex overflow-x-auto">
-          {NAV_ITEMS.map(({ href, label, icon: Icon }) => {
+          {MAIN_NAV.map(({ href, label, icon: Icon }) => {
             const active = isActive(pathname, href);
 
             return (
