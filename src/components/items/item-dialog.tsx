@@ -26,6 +26,7 @@ import { useFees } from '@/lib/storage/settings';
 import { cn } from '@/lib/utils/cn';
 
 import { ListingList } from './listing-list';
+import { PatternPreview } from './pattern-preview';
 import { FavoriteButton } from './favorite-button';
 import { ItemImage } from './item-image';
 import { ItemTitle } from './item-title';
@@ -155,6 +156,8 @@ const ItemDetails = ({ item, onNavigate }: { item: Item; onNavigate: () => void 
           </Link>
         </Button>
       ) : null}
+
+      {parseItemName(item.name).wear ? <PatternPreview name={item.name} /> : null}
 
       {keysReady ? (
         <section className="space-y-3">

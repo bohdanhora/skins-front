@@ -2,6 +2,7 @@
 
 import { ArrowDown, ExternalLink, Search } from 'lucide-react';
 
+import { BlueShareTag } from '@/components/items/blue-share-tag';
 import { ItemImage } from '@/components/items/item-image';
 import { ItemTitle } from '@/components/items/item-title';
 import { Button } from '@/components/ui/button';
@@ -76,6 +77,9 @@ export const SnipeCard = ({ snipe, onCheck }: SnipeCardProps) => {
               .filter(Boolean)
               .join(', ')}
           </p>
+          {snipe.blue ? (
+            <BlueShareTag blue={snipe.blue} name={snipe.name} className="mt-0.5 block text-xs" />
+          ) : null}
         </div>
 
         <div className="text-foreground-subtle flex justify-center" aria-hidden>

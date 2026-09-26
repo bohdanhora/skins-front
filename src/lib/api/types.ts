@@ -228,11 +228,17 @@ export interface SalesChart {
   stats: SalesStats | null;
 }
 
+export interface BlueShare {
+  playside: number;
+  backside: number;
+}
+
 export interface FloatListing {
   market: ListingMarketId;
   price: number;
   float: number | null;
   paintSeed: number | null;
+  blue: BlueShare | null;
   url: string;
 }
 
@@ -266,8 +272,10 @@ export interface FloatSearch {
 export interface SteamFloatListing {
   id: string;
   priceLabel: string;
+  price: number | null;
   float: number | null;
   paintSeed: number | null;
+  blue: BlueShare | null;
   phase: MarketPhase | null;
   url: string;
 }
@@ -281,6 +289,7 @@ export interface Snipe {
   listingPrice: number;
   float: number | null;
   paintSeed: number | null;
+  blue: BlueShare | null;
   phase: string | null;
   orderPrice: number;
   orderAmount: number;
@@ -334,6 +343,7 @@ export interface InventoryItem {
   rarityColor: string | null;
   float: number | null;
   paintSeed: number | null;
+  blue: BlueShare | null;
   phase: MarketPhase | null;
   amount: number;
   tradable: boolean;
@@ -373,4 +383,71 @@ export interface SteamPrice {
   median: number | null;
   volume: number;
   url: string;
+}
+
+export type BlueGemWear = 'FN' | 'MW' | 'FT' | 'WW' | 'BS';
+
+export interface BlueGemListing {
+  market: MarketId | 'steam';
+  id: string;
+  name: string;
+  price: number | null;
+  priceLabel: string | null;
+  float: number | null;
+  paintSeed: number;
+  blue: BlueShare;
+  floorPrice: number | null;
+  url: string;
+}
+
+export interface CheapestPattern {
+  market: MarketId;
+  price: number;
+  float: number | null;
+  paintSeed: number;
+  blue: BlueShare;
+}
+
+export interface PatternImages {
+  name: string;
+  pageUrl: string;
+  imageBase: string;
+  images: string[];
+  blue: (BlueShare | null)[];
+  poses: { pose: 'playside' | 'backside' | 'frontview'; base: string }[];
+}
+
+export interface BlueGemSearch {
+  weapon: string;
+  listings: BlueGemListing[];
+  sources: {
+    dmarket: SourceStatus;
+    whiteMarket: SourceStatus;
+    csfloat: SourceStatus;
+    steam: SourceStatus | null;
+  };
+  csfloatSeeds: { seed: number; blue: BlueShare }[];
+  checkedAt: string;
+}
+
+export type TradeUpTier =
+  'consumer' | 'industrial' | 'milspec' | 'restricted' | 'classified' | 'covert' | 'rare';
+
+export interface TradeUpSkin {
+  name: string;
+  weapon: string;
+  tier: TradeUpTier;
+  collections: string[];
+  cases: string[];
+  minFloat: number;
+  maxFloat: number;
+  wearless: boolean;
+  stattrak: boolean;
+  image: string | null;
+  prices: Record<string, [number, number]>;
+}
+
+export interface TradeUpCatalog {
+  skins: TradeUpSkin[];
+  updatedAt: string | null;
 }

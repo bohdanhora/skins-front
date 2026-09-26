@@ -4,10 +4,12 @@ import { Clock, TrendingDown, TriangleAlert } from 'lucide-react';
 
 import type { DealMode, Item } from '@/lib/api/types';
 import { dealWarning } from '@/lib/deal-warning';
+import { isCaseHardened } from '@/lib/format/blue';
 import { formatPercent, formatUsd } from '@/lib/format/money';
 import { timeAgo } from '@/lib/format/time';
 
 import { BenefitBadge } from './benefit-badge';
+import { CheapestPatterns } from './cheapest-patterns';
 import { FavoriteButton } from './favorite-button';
 import { ItemImage } from './item-image';
 import { ItemTitle } from './item-title';
@@ -56,6 +58,7 @@ export const ItemCard = ({ item, mode, onOpen }: ItemCardProps) => {
         <ItemTitle name={item.name} />
         <div className="mt-3 flex-1">
           <PriceRows item={item} />
+          {isCaseHardened(item.name) ? <CheapestPatterns name={item.name} /> : null}
         </div>
         <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
           <BenefitBadge item={item} mode={mode} />

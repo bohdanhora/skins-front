@@ -11,6 +11,11 @@ import { useFees, useWithdrawals } from '@/lib/storage/settings';
 
 import { apiGet } from './client';
 import type {
+  BlueGemSearch,
+  CheapestPattern,
+  PatternImages,
+  TradeUpCatalog,
+  BlueGemWear,
   FloatSearch,
   Inventory,
   Item,
@@ -137,6 +142,51 @@ export const useFloatSearch = ({ name, floatFrom, floatTo }: FloatQuery) =>
       apiGet<FloatSearch>('/items/floats', { name: name ?? '', floatFrom, floatTo }, signal),
     enabled: name !== null,
     placeholderData: keepPreviousData,
+  });
+
+export const useBlueGemWeapons = () =>
+  useQuery({
+    queryKey: ['blue-gems', 'weapons'],
+    queryFn: ({ signal }) => apiGet<{ weapons: string[] }>('/items/blue-gems/weapons', {}, signal),
+    staleTime: Infinity,
+  });
+
+export const useBlueGems = (weapon: string | null, wear: BlueGemWear | null) =>
+  useQuery({
+    queryKey: ['blue-gems', weapon, wear],
+    queryFn: ({ signal }) =>
+      apiGet<BlueGemSearch>(
+        '/items/blue-gems',
+        { weapon: weapon ?? '', wear: wear ?? undefined },
+        signal,
+      ),
+    enabled: weapon !== null,
+    staleTime: 5 * 60_000,
+  });
+
+export const useCheapestPatterns = (name: string, enabled: boolean) =>
+  useQuery({
+    queryKey: ['blue-gems', 'cheapest', name],
+    queryFn: ({ signal }) =>
+      apiGet<{ listings: CheapestPattern[] }>('/items/blue-gems/cheapest', { name }, signal),
+    enabled,
+    staleTime: 5 * 60_000,
+  });
+
+export const usePatternImages = (name: string | null) =>
+  useQuery({
+    queryKey: ['patterns', name],
+    queryFn: ({ signal }) => apiGet<PatternImages>('/items/patterns', { name: name ?? '' }, signal),
+    enabled: name !== null,
+    staleTime: Infinity,
+    retry: false,
+  });
+
+export const useTradeUpCatalog = () =>
+  useQuery({
+    queryKey: ['trade-ups', 'catalog'],
+    queryFn: ({ signal }) => apiGet<TradeUpCatalog>('/trade-ups/catalog', {}, signal),
+    staleTime: 5 * 60_000,
   });
 
 export const useItemListings = (name: string | null, enabled: boolean) =>

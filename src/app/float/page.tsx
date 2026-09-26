@@ -5,6 +5,7 @@ import { Suspense, useState } from 'react';
 
 import { recallValue, rememberValue, useRememberedState } from '@/hooks/use-remembered-state';
 
+import { BlueGemPanel } from '@/components/floats/blue-gem-panel';
 import {
   FLOAT_SEARCH_KEY,
   FloatSearchPanel,
@@ -15,7 +16,7 @@ import { Segmented } from '@/components/ui/segmented';
 import { Skeleton } from '@/components/ui/skeleton';
 import type { Snipe } from '@/lib/api/types';
 
-type Tab = 'finds' | 'search';
+type Tab = 'finds' | 'search' | 'blueGem';
 
 const TAB_KEY = 'float.tab';
 
@@ -36,7 +37,11 @@ const FloatPage = () => {
   });
   const [tab, setTab] = useRememberedState<Tab>(
     TAB_KEY,
-    params.get('tab') === 'search' ? 'search' : 'finds',
+    params.get('tab') === 'search'
+      ? 'search'
+      : params.get('tab') === 'blueGem'
+        ? 'blueGem'
+        : 'finds',
   );
   const [searchKey, setSearchKey] = useState(0);
 
@@ -64,12 +69,15 @@ const FloatPage = () => {
         options={[
           { value: 'finds', label: 'Находки' },
           { value: 'search', label: 'Поиск по флоату' },
+          { value: 'blueGem', label: 'Блюгем' },
         ]}
-        className="sm:max-w-md"
+        className="sm:max-w-lg"
       />
 
       {tab === 'finds' ? (
         <SnipesPanel onCheck={check} />
+      ) : tab === 'blueGem' ? (
+        <BlueGemPanel />
       ) : (
         <FloatSearchPanel key={searchKey} initial={start} />
       )}

@@ -4,6 +4,7 @@ import { ExternalLink, KeyRound, Zap } from 'lucide-react';
 import { useState } from 'react';
 
 import { useRememberedState } from '@/hooks/use-remembered-state';
+import { BlueShareTag } from '@/components/items/blue-share-tag';
 import { Segmented } from '@/components/ui/segmented';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useFloatSearch } from '@/lib/api/queries';
@@ -121,6 +122,7 @@ export const FloatResults = ({ name, range, zoom }: FloatResultsProps) => {
               <ListingRow
                 key={`${listing.market}-${listing.float}-${listing.price}-${index}`}
                 listing={listing}
+                name={name}
                 zoom={zoom}
                 cheapest={listing === best}
               />
@@ -129,7 +131,7 @@ export const FloatResults = ({ name, range, zoom }: FloatResultsProps) => {
         )}
       </section>
 
-      <SteamListings data={data.steam} zoom={zoom} />
+      <SteamListings data={data.steam} name={name} zoom={zoom} />
     </div>
   );
 };
@@ -209,7 +211,15 @@ const Tile = ({ label, children }: { label: string; children: React.ReactNode })
   </div>
 );
 
-const SteamListings = ({ data, zoom }: { data: FloatSearch['steam']; zoom: FloatRange | null }) => {
+const SteamListings = ({
+  data,
+  name,
+  zoom,
+}: {
+  data: FloatSearch['steam'];
+  name: string;
+  zoom: FloatRange | null;
+}) => {
   if (data.status === 'error') {
     return (
       <p className="text-foreground-muted text-xs">
@@ -233,7 +243,7 @@ const SteamListings = ({ data, zoom }: { data: FloatSearch['steam']; zoom: Float
       </div>
       <ul className="divide-border border-border bg-surface divide-y overflow-hidden rounded-2xl border">
         {data.listings.map((listing) => (
-          <SteamListingRow key={listing.id} listing={listing} zoom={zoom} />
+          <SteamListingRow key={listing.id} listing={listing} name={name} zoom={zoom} />
         ))}
       </ul>
     </section>
@@ -242,9 +252,11 @@ const SteamListings = ({ data, zoom }: { data: FloatSearch['steam']; zoom: Float
 
 const SteamListingRow = ({
   listing,
+  name,
   zoom,
 }: {
   listing: SteamFloatListing;
+  name: string;
   zoom: FloatRange | null;
 }) => (
   <li>
@@ -272,8 +284,16 @@ const SteamListingRow = ({
             .filter(Boolean)
             .join(', ')}
         </p>
+        {listing.blue ? <BlueShareTag blue={listing.blue} name={name} /> : null}
       </div>
-      <span className="numeric text-[0.9375rem] font-semibold">{listing.priceLabel}</span>
+      <div className="text-right whitespace-nowrap">
+        <p className="numeric text-[0.9375rem] font-semibold">
+          {listing.price !== null ? formatUsd(listing.price) : listing.priceLabel}
+        </p>
+        {listing.price !== null ? (
+          <p className="text-foreground-subtle numeric text-xs">{listing.priceLabel}</p>
+        ) : null}
+      </div>
       <ExternalLink className="text-foreground-subtle size-3.5 shrink-0" aria-hidden />
     </a>
   </li>
@@ -330,10 +350,12 @@ const BuyOrders = ({ orders, best }: { orders: FloatBuyOrder[]; best: FloatListi
 
 const ListingRow = ({
   listing,
+  name,
   zoom,
   cheapest,
 }: {
   listing: FloatListing;
+  name: string;
   zoom: FloatRange | null;
   cheapest: boolean;
 }) => (
@@ -361,6 +383,7 @@ const ListingRow = ({
           {MARKETS[listing.market].name}
         </p>
         {listing.paintSeed !== null ? <p className="mt-0.5">паттерн {listing.paintSeed}</p> : null}
+        {listing.blue ? <BlueShareTag blue={listing.blue} name={name} /> : null}
       </div>
       <span className="numeric text-[0.9375rem] font-semibold">{formatUsd(listing.price)}</span>
       <ExternalLink className="text-foreground-subtle size-3.5 shrink-0" aria-hidden />

@@ -13,6 +13,7 @@ const snipe = (extra: Partial<Snipe>): Snipe => ({
   listingPrice: 2700,
   float: 0.16,
   paintSeed: 661,
+  blue: null,
   phase: null,
   orderPrice: 5400,
   orderAmount: 4,
