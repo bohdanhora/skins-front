@@ -5,6 +5,8 @@ import { ThemeProvider } from 'next-themes';
 import { useState, type ReactNode } from 'react';
 
 import { ItemDialogProvider } from '@/components/items/item-dialog-provider';
+import { AccountSync } from '@/components/layout/account-sync';
+import { PurchaseFormProvider } from '@/components/purchases/purchase-form';
 import { ApiError } from '@/lib/api/client';
 
 const STALE_TIME_MS = 60_000;
@@ -36,7 +38,10 @@ export const Providers = ({ children }: { children: ReactNode }) => {
   return (
     <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
       <QueryClientProvider client={client}>
-        <ItemDialogProvider>{children}</ItemDialogProvider>
+        <AccountSync />
+        <PurchaseFormProvider>
+          <ItemDialogProvider>{children}</ItemDialogProvider>
+        </PurchaseFormProvider>
       </QueryClientProvider>
     </ThemeProvider>
   );

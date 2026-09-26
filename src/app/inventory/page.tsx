@@ -8,14 +8,17 @@ import { InventoryItemRow } from '@/components/inventory/inventory-item-row';
 import { InventorySummary } from '@/components/inventory/inventory-summary';
 import { useOpenItem } from '@/components/items/item-dialog-provider';
 import { FilterBar, SearchField, Toggle } from '@/components/items/filters';
+import { usePurchaseForm } from '@/components/purchases/purchase-form';
 import { EmptyState } from '@/components/states/empty-state';
 import { Button } from '@/components/ui/button';
 import { IconInput } from '@/components/ui/input';
 import { Select } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useAccount, usePurchases } from '@/lib/api/account';
 import { useInventory } from '@/lib/api/queries';
 import type { InventoryItem } from '@/lib/api/types';
 import { timeAgo } from '@/lib/format/time';
+import { findPurchase, unlockFrom, TRADE_LOCK_DAYS } from '@/lib/purchases/purchases';
 import { useSteamProfile } from '@/lib/storage/settings';
 
 type InventorySort = 'payoutDesc' | 'payoutAsc' | 'popular' | 'float' | 'name';
@@ -42,7 +45,11 @@ const COMPARATORS: Record<InventorySort, (left: InventoryItem, right: InventoryI
 };
 
 const InventoryPage = () => {
-  const [profile, setProfile] = useSteamProfile();
+  const [storedProfile, setProfile] = useSteamProfile();
+  const { signedIn, account } = useAccount();
+  const purchases = usePurchases();
+  const form = usePurchaseForm();
+  const profile = storedProfile || account?.steamId || '';
   const [draft, setDraft] = useState<string | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
   const [sort, setSort] = useRememberedState<InventorySort>('inventory.sort', 'payoutDesc');
@@ -68,6 +75,23 @@ const InventoryPage = () => {
   }, [inventory.data, search, sellableOnly, sort]);
 
   const data = inventory.data;
+  const held = purchases.data ?? [];
+  const ownInventory = !!account && data?.steamId === account.steamId;
+
+  const record = (item: InventoryItem) => {
+    const boughtAt = new Date().toISOString();
+
+    form.add({
+      name: item.name,
+      image: item.image,
+      rarityColor: item.rarityColor,
+      float: item.float,
+      paintSeed: item.paintSeed,
+      assetId: item.assetIds[0] ?? null,
+      boughtAt,
+      unlockAt: unlockFrom(boughtAt, item.tradable ? 0 : TRADE_LOCK_DAYS),
+    });
+  };
 
   return (
     <div className="space-y-6">
@@ -178,7 +202,13 @@ const InventoryPage = () => {
           ) : (
             <div className="space-y-2.5">
               {items.map((item) => (
-                <InventoryItemRow key={item.assetIds[0]} item={item} onOpen={openItem} />
+                <InventoryItemRow
+                  key={item.assetIds[0]}
+                  item={item}
+                  purchase={ownInventory ? findPurchase(held, item) : null}
+                  onOpen={openItem}
+                  onRecord={signedIn && ownInventory && item.marketable ? record : null}
+                />
               ))}
             </div>
           )}

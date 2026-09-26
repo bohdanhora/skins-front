@@ -76,6 +76,44 @@ export const useItems = (query: ItemsQuery, options: { enabled?: boolean } = {})
   });
 };
 
+const NAMES_PER_REQUEST = 100;
+
+export const useItemsByName = (names: string[]) => {
+  const fees = useFees();
+  const sorted = [...new Set(names)].sort();
+
+  return useQuery({
+    queryKey: ['items-by-name', sorted, fees],
+    queryFn: async ({ signal }) => {
+      const chunks: string[][] = [];
+
+      for (let index = 0; index < sorted.length; index += NAMES_PER_REQUEST) {
+        chunks.push(sorted.slice(index, index + NAMES_PER_REQUEST));
+      }
+
+      const pages = await Promise.all(
+        chunks.map((chunk) =>
+          apiGet<ItemsPage>(
+            '/items',
+            {
+              names: chunk,
+              limit: NAMES_PER_REQUEST,
+              feeWhiteMarket: fees.whiteMarket,
+              feeDmarket: fees.dmarket,
+              feeCsfloat: fees.csfloat,
+            },
+            signal,
+          ),
+        ),
+      );
+
+      return new Map(pages.flatMap((page) => page.items).map((item) => [item.name, item]));
+    },
+    enabled: sorted.length > 0,
+    placeholderData: keepPreviousData,
+  });
+};
+
 export const useItem = (name: string | null) => {
   const fees = useFees();
 

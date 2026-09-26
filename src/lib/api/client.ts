@@ -1,4 +1,37 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4100/api';
+import { CHANGE_EVENT } from '@/lib/storage/local-store';
+
+export const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4100/api';
+export const SESSION_KEY = 'skins.session';
+
+export const readSession = (): string | null => {
+  try {
+    const raw = window.localStorage.getItem(SESSION_KEY);
+
+    return raw ? (JSON.parse(raw) as string) : null;
+  } catch {
+    return null;
+  }
+};
+
+export const writeSession = (token: string | null): void => {
+  try {
+    if (token) {
+      window.localStorage.setItem(SESSION_KEY, JSON.stringify(token));
+    } else {
+      window.localStorage.removeItem(SESSION_KEY);
+    }
+  } catch {}
+
+  window.dispatchEvent(new Event(CHANGE_EVENT));
+};
+
+const UNAUTHORIZED = 401;
+
+const authHeaders = (): Record<string, string> => {
+  const token = typeof window === 'undefined' ? null : readSession();
+
+  return token ? { Authorization: `Bearer ${token}` } : {};
+};
 
 export class ApiError extends Error {
   readonly status: number;
@@ -48,18 +81,47 @@ const readMessage = (payload: unknown): string => {
   return 'Request failed';
 };
 
+const fail = async (response: Response): Promise<never> => {
+  const payload: unknown = await response.json().catch(() => null);
+
+  if (response.status === UNAUTHORIZED && readSession()) {
+    writeSession(null);
+  }
+
+  throw new ApiError(response.status, readMessage(payload));
+};
+
 export const apiGet = async <T>(
   path: string,
   query?: Record<string, QueryValue>,
   signal?: AbortSignal,
 ): Promise<T> => {
-  const response = await fetch(buildUrl(path, query), { signal });
+  const response = await fetch(buildUrl(path, query), { signal, headers: authHeaders() });
 
   if (!response.ok) {
-    const payload: unknown = await response.json().catch(() => null);
-
-    throw new ApiError(response.status, readMessage(payload));
+    return fail(response);
   }
 
   return (await response.json()) as T;
+};
+
+export const apiSend = async <T>(
+  method: 'POST' | 'PUT' | 'PATCH' | 'DELETE',
+  path: string,
+  body?: unknown,
+): Promise<T> => {
+  const response = await fetch(buildUrl(path), {
+    method,
+    headers: {
+      ...authHeaders(),
+      ...(body === undefined ? {} : { 'Content-Type': 'application/json' }),
+    },
+    body: body === undefined ? undefined : JSON.stringify(body),
+  });
+
+  if (!response.ok) {
+    return fail(response);
+  }
+
+  return (response.status === 204 ? undefined : await response.json()) as T;
 };

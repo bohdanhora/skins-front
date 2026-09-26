@@ -1,12 +1,13 @@
-import { Lock } from 'lucide-react';
+import { Lock, Plus } from 'lucide-react';
 
 import { BlueShareTag } from '@/components/items/blue-share-tag';
 import { ItemImage } from '@/components/items/item-image';
 import { ItemTitle } from '@/components/items/item-title';
 import type { InventoryItem, MarketId, SaleOption } from '@/lib/api/types';
 import { formatFloat } from '@/lib/format/float';
-import { formatUsd } from '@/lib/format/money';
+import { formatSignedUsd, formatUsd } from '@/lib/format/money';
 import { MARKETS, SELL_MARKET_ORDER } from '@/lib/markets';
+import { formatLockLeft, lockLeft, type Purchase } from '@/lib/purchases/purchases';
 import { cn } from '@/lib/utils/cn';
 
 interface CellProps {
@@ -54,11 +55,16 @@ const isBest = (item: InventoryItem, option: SaleOption | undefined): boolean =>
 
 interface InventoryItemRowProps {
   item: InventoryItem;
+  purchase: Purchase | null;
   onOpen: (name: string) => void;
+  onRecord: ((item: InventoryItem) => void) | null;
 }
 
-export const InventoryItemRow = ({ item, onOpen }: InventoryItemRowProps) => {
+export const InventoryItemRow = ({ item, purchase, onOpen, onRecord }: InventoryItemRowProps) => {
   const instant = findOption(item, 'dmarket', 'instant');
+  const locked = purchase ? lockLeft(purchase) : 0;
+  const profit =
+    purchase && item.best ? (item.best.payout - purchase.price) * purchase.amount : null;
 
   return (
     <article className="bg-surface relative flex flex-col gap-3 rounded-3xl p-3 shadow-[var(--shadow-card)] lg:flex-row lg:items-center">
@@ -89,10 +95,29 @@ export const InventoryItemRow = ({ item, onOpen }: InventoryItemRowProps) => {
             {!item.tradable && item.marketable ? (
               <span className="text-warning flex items-center gap-1">
                 <Lock className="size-3" aria-hidden />
-                трейд-бан
+                {locked > 0 ? `трейдбан ещё ${formatLockLeft(locked)}` : 'трейд-бан'}
               </span>
             ) : null}
           </p>
+          {purchase ? (
+            <p className="numeric mt-1 text-xs">
+              <span className="text-foreground-muted">куплено за {formatUsd(purchase.price)}</span>
+              {profit !== null ? (
+                <span className={cn('ml-2 font-semibold', profit >= 0 ? 'text-gain' : 'text-loss')}>
+                  {formatSignedUsd(profit)}
+                </span>
+              ) : null}
+            </p>
+          ) : onRecord ? (
+            <button
+              type="button"
+              onClick={() => onRecord(item)}
+              className="text-accent pointer-events-auto relative z-10 mt-1 flex items-center gap-1 text-xs font-medium hover:underline"
+            >
+              <Plus className="size-3" aria-hidden />
+              Записать покупку
+            </button>
+          ) : null}
         </div>
       </div>
 

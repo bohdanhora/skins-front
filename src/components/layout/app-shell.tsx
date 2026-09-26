@@ -7,6 +7,7 @@ import {
   FlaskConical,
   Gauge,
   Heart,
+  ReceiptText,
   Search,
   Settings,
   Sparkles,
@@ -19,6 +20,7 @@ import { useState, type ComponentType, type ReactNode } from 'react';
 
 import { cn } from '@/lib/utils/cn';
 
+import { AccountMenu } from './account-menu';
 import { Logo } from './logo';
 import { SettingsDialog } from './settings-dialog';
 import { StatusPill } from './status-pill';
@@ -42,6 +44,7 @@ const MAIN_NAV: NavItem[] = [
 const PERSONAL_NAV: NavItem[] = [
   { href: '/favorites', label: 'Избранное', icon: Heart },
   { href: '/inventory' as Route, label: 'Инвентарь', icon: Backpack },
+  { href: '/purchases' as Route, label: 'Покупки', icon: ReceiptText },
 ];
 
 const NAV_ITEMS = [...MAIN_NAV, ...PERSONAL_NAV];
@@ -116,6 +119,7 @@ export const AppShell = ({ children }: { children: ReactNode }) => {
             >
               <Settings className="size-[1.125rem]" aria-hidden />
             </button>
+            <AccountMenu />
           </div>
         </div>
       </header>

@@ -2,6 +2,7 @@
 
 import {
   ArrowRight,
+  ReceiptText,
   ExternalLink,
   Gauge,
   Info,
@@ -13,9 +14,11 @@ import type { Route } from 'next';
 import Link from 'next/link';
 import type { ReactNode } from 'react';
 
+import { usePurchaseForm } from '@/components/purchases/purchase-form';
 import { Button } from '@/components/ui/button';
 import { Dialog } from '@/components/ui/dialog';
 import { Skeleton } from '@/components/ui/skeleton';
+import { usePurchases } from '@/lib/api/account';
 import { useItem, useItemListings, useStatus, useSteamPrice } from '@/lib/api/queries';
 import type { Flip, Item, MarketId } from '@/lib/api/types';
 import { dealWarning } from '@/lib/deal-warning';
@@ -89,7 +92,9 @@ const ItemDetails = ({ item, onNavigate }: { item: Item; onNavigate: () => void 
               </span>
             ) : null}
             <FavoriteButton name={item.name} className="bg-surface-muted" />
+            <RecordPurchaseButton item={item} onNavigate={onNavigate} />
           </div>
+          <OwnPurchases name={item.name} />
         </div>
       </div>
 
@@ -166,6 +171,42 @@ const ItemDetails = ({ item, onNavigate }: { item: Item; onNavigate: () => void 
         </section>
       ) : null}
     </div>
+  );
+};
+
+const RecordPurchaseButton = ({ item, onNavigate }: { item: Item; onNavigate: () => void }) => {
+  const form = usePurchaseForm();
+
+  return (
+    <button
+      type="button"
+      aria-label="Записать покупку"
+      title="Записать покупку"
+      onClick={() => {
+        onNavigate();
+        form.add({ name: item.name, image: item.image, rarityColor: item.rarityColor });
+      }}
+      className="press bg-surface-muted text-foreground-subtle hover:text-foreground flex size-9 items-center justify-center rounded-full"
+    >
+      <ReceiptText className="size-[1.125rem]" aria-hidden />
+    </button>
+  );
+};
+
+const OwnPurchases = ({ name }: { name: string }) => {
+  const purchases = usePurchases();
+  const held = (purchases.data ?? []).filter(
+    (purchase) => purchase.name === name && purchase.sale === null,
+  );
+
+  if (held.length === 0) {
+    return null;
+  }
+
+  return (
+    <p className="text-foreground-muted numeric text-xs">
+      Куплено за {held.map((purchase) => formatUsd(purchase.price)).join(', ')}
+    </p>
   );
 };
 

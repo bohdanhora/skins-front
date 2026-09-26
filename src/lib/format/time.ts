@@ -44,3 +44,23 @@ export const timeAgo = (iso: string | null, now = Date.now()): string => {
 
   return `${days} ${plural(days, ['день', 'дня', 'дней'])} назад`;
 };
+
+const dateTime = new Intl.DateTimeFormat('ru-RU', {
+  day: 'numeric',
+  month: 'short',
+  hour: '2-digit',
+  minute: '2-digit',
+});
+
+const dateOnly = new Intl.DateTimeFormat('ru-RU', {
+  day: 'numeric',
+  month: 'short',
+  year: 'numeric',
+});
+
+export const formatDateTime = (iso: string): string => dateTime.format(new Date(iso));
+
+export const formatDate = (iso: string): string => dateOnly.format(new Date(iso));
+
+export const daysBetween = (from: string, to: string): number =>
+  Math.max(0, Math.round((Date.parse(to) - Date.parse(from)) / DAY_MS));

@@ -1,12 +1,12 @@
 'use client';
 
 import { Check, KeyRound, Monitor, Moon, Sun } from 'lucide-react';
-import { useTheme } from 'next-themes';
 import { useEffect, useState } from 'react';
 
 import { Button } from '@/components/ui/button';
 import { Dialog } from '@/components/ui/dialog';
 import { Segmented } from '@/components/ui/segmented';
+import { useSessionToken } from '@/lib/api/account';
 import { useStatus } from '@/lib/api/queries';
 import type { SellMarketId } from '@/lib/api/types';
 import { timeAgo } from '@/lib/format/time';
@@ -15,6 +15,7 @@ import {
   DEFAULT_FEES,
   DEFAULT_WITHDRAWALS,
   useFeesSetting,
+  useThemeSetting,
   useWithdrawalsSetting,
   type Fees,
 } from '@/lib/storage/settings';
@@ -129,7 +130,8 @@ const FeeFields = ({
 export const SettingsDialog = ({ open, onOpenChange }: SettingsDialogProps) => {
   const [fees, setFees] = useFeesSetting();
   const [withdrawals, setWithdrawals] = useWithdrawalsSetting();
-  const { theme = 'system', setTheme } = useTheme();
+  const [theme, setTheme] = useThemeSetting();
+  const signedIn = useSessionToken() !== null;
   const status = useStatus();
 
   return (
@@ -137,7 +139,7 @@ export const SettingsDialog = ({ open, onOpenChange }: SettingsDialogProps) => {
       open={open}
       onOpenChange={onOpenChange}
       title="Настройки"
-      description="Сохраняются в этом браузере."
+      description={signedIn ? 'Сохраняются в аккаунте.' : 'Сохраняются в этом браузере.'}
     >
       <div className="space-y-7">
         <FeeFields
@@ -164,7 +166,7 @@ export const SettingsDialog = ({ open, onOpenChange }: SettingsDialogProps) => {
           <h3 className="text-sm font-semibold">Тема</h3>
           <Segmented
             label="Тема"
-            value={theme as 'light' | 'dark' | 'system'}
+            value={theme}
             onChange={setTheme}
             options={[
               { value: 'light', label: 'Светлая', icon: <Sun className="size-4" aria-hidden /> },

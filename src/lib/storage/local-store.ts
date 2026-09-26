@@ -2,7 +2,7 @@
 
 import { useCallback, useSyncExternalStore } from 'react';
 
-const CHANGE_EVENT = 'skins:storage';
+export const CHANGE_EVENT = 'skins:storage';
 
 const read = <T>(key: string, fallback: T): T => {
   try {
@@ -12,6 +12,16 @@ const read = <T>(key: string, fallback: T): T => {
   } catch {
     return fallback;
   }
+};
+
+export const readLocal = <T>(key: string): T | undefined => read<T | undefined>(key, undefined);
+
+export const writeLocal = <T>(key: string, value: T): void => {
+  try {
+    window.localStorage.setItem(key, JSON.stringify(value));
+  } catch {}
+
+  window.dispatchEvent(new Event(CHANGE_EVENT));
 };
 
 const cache = new Map<string, { raw: string | null; value: unknown }>();
