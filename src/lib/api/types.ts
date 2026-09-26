@@ -33,7 +33,8 @@ export type ItemSort =
   | 'name'
   | 'sales8w'
   | 'score'
-  | 'belowSales';
+  | 'belowSales'
+  | 'fresh';
 
 export interface MarketQuote {
   price: number | null;
@@ -94,6 +95,7 @@ export interface Item {
   instant: Flip | null;
   sales: SalesStats | null;
   top: TopOffer | null;
+  priceChangedAt?: string | null;
 }
 
 export interface ItemsPage {

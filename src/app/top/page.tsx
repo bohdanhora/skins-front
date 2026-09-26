@@ -31,6 +31,7 @@ const CLOSE_BID_COVER = 90;
 
 const SORTS: { value: ItemSort; label: string }[] = [
   { value: 'score', label: 'Лучший сигнал' },
+  { value: 'fresh', label: 'Сначала новые' },
   { value: 'benefit', label: 'Больше скидка в %' },
   { value: 'benefitAmount', label: 'Больше скидка в $' },
   { value: 'bidCover', label: 'Автопокупка ближе к цене' },

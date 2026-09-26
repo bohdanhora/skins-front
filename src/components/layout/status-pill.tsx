@@ -31,7 +31,13 @@ export const StatusPill = ({ className }: { className?: string }) => {
     return null;
   }
 
-  const { dmarket, refreshing } = status.data;
+  const { refreshing } = status.data;
+  const updatedAt =
+    [status.data.whiteMarket, status.data.dmarket, status.data.csfloat, status.data.lisSkins]
+      .map((market) => market?.updatedAt)
+      .filter((stamp): stamp is string => !!stamp)
+      .sort()
+      .at(-1) ?? null;
 
   return (
     <span
@@ -42,11 +48,7 @@ export const StatusPill = ({ className }: { className?: string }) => {
         className={cn('size-2 rounded-full', refreshing ? 'bg-warning animate-pulse' : 'bg-gain')}
         aria-hidden
       />
-      {refreshing && !dmarket.updatedAt
-        ? 'Собираем цены...'
-        : refreshing
-          ? 'Обновляем цены...'
-          : `Цены: ${timeAgo(dmarket.updatedAt, now)}`}
+      {updatedAt ? `Цены: ${timeAgo(updatedAt, now)}` : 'Собираем цены...'}
     </span>
   );
 };

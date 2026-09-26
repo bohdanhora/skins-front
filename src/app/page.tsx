@@ -35,6 +35,7 @@ const LIQUID_LISTINGS = 5;
 
 const SORTS: { value: ItemSort; label: string }[] = [
   { value: 'benefit', label: 'Больше выгода в %' },
+  { value: 'fresh', label: 'Сначала новые' },
   { value: 'benefitAmount', label: 'Больше выгода в $' },
   { value: 'priceAsc', label: 'Сначала дешёвые' },
   { value: 'priceDesc', label: 'Сначала дорогие' },
