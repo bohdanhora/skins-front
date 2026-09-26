@@ -64,3 +64,13 @@ export const formatDate = (iso: string): string => dateOnly.format(new Date(iso)
 
 export const daysBetween = (from: string, to: string): number =>
   Math.max(0, Math.round((Date.parse(to) - Date.parse(from)) / DAY_MS));
+
+export const shortAgo = (iso: string, now = Date.now()): string => {
+  const elapsed = Math.max(0, now - new Date(iso).getTime());
+
+  if (elapsed < MINUTE_MS) return 'только что';
+  if (elapsed < HOUR_MS) return `${Math.floor(elapsed / MINUTE_MS)} мин`;
+  if (elapsed < DAY_MS) return `${Math.floor(elapsed / HOUR_MS)} ч`;
+
+  return `${Math.floor(elapsed / DAY_MS)} дн.`;
+};

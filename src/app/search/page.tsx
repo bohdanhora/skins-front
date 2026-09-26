@@ -14,6 +14,7 @@ import {
 } from '@/components/items/filters';
 import { useRememberedState } from '@/hooks/use-remembered-state';
 import { GridSkeleton, ItemGrid } from '@/components/items/item-grid';
+import { SmartSearchBar } from '@/components/items/smart-search';
 import { EmptyState } from '@/components/states/empty-state';
 import { Chip } from '@/components/ui/chip';
 import { parseMoney } from '@/components/ui/input';
@@ -101,6 +102,21 @@ const SearchPage = () => {
       </section>
 
       <FilterBar>
+        <SmartSearchBar
+          onApply={(filters) => {
+            setQ(filters.q ?? '');
+            setCategory(filters.category);
+            setSubcategory(undefined);
+            setWear(filters.wear ?? 'all');
+            setEdition(filters.edition ?? 'all');
+            setPhase(filters.phase ?? 'all');
+            setMinPrice(filters.minPrice !== undefined ? String(filters.minPrice) : '');
+            setMaxPrice(filters.maxPrice !== undefined ? String(filters.maxPrice) : '');
+            if (filters.sort && SORTS.some((option) => option.value === filters.sort)) {
+              setSort(filters.sort);
+            }
+          }}
+        />
         <SearchField
           value={q}
           onChange={setQ}

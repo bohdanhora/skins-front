@@ -21,6 +21,7 @@ import { Dialog } from '@/components/ui/dialog';
 import { Input, MoneyInput, parseMoney } from '@/components/ui/input';
 import { Select } from '@/components/ui/select';
 import { useAccount, useDeletePurchase, useSavePurchase } from '@/lib/api/account';
+import type { PurchaseDraft } from '@/lib/api/types';
 import { parseFloatInput } from '@/lib/format/float';
 import { formatUsd } from '@/lib/format/money';
 import { formatDateTime } from '@/lib/format/time';
@@ -36,6 +37,7 @@ import {
   type PurchaseMarket,
 } from '@/lib/purchases/purchases';
 
+import { DraftFiller } from './draft-filler';
 import { PURCHASE_MARKET_OPTIONS } from './purchase-shared';
 
 export type PurchasePrefill = Partial<PurchaseInput>;
@@ -118,6 +120,19 @@ const EditForm = ({ purchase, prefill, onDone }: EditFormProps) => {
   const boughtIso = fromLocalInput(boughtAt);
   const unlockAt = boughtIso ? unlockFrom(boughtIso, Number(lock)) : null;
 
+  const applyDraft = (draft: PurchaseDraft) => {
+    if (draft.name && draft.known) {
+      setItem({ name: draft.name, image: draft.image, rarityColor: draft.rarityColor });
+    }
+    if (draft.price !== null) setPrice(centsToField(draft.price));
+    if (draft.float !== null) setFloat(String(draft.float));
+    if (draft.paintSeed !== null) setPaintSeed(String(draft.paintSeed));
+    if (draft.stickers.length > 0) setStickers(draft.stickers.slice(0, 5));
+    if (draft.market && PURCHASE_MARKET_OPTIONS.some((option) => option.value === draft.market)) {
+      setMarket(draft.market as PurchaseMarket);
+    }
+  };
+
   const submit = (event: FormEvent) => {
     event.preventDefault();
 
@@ -162,6 +177,8 @@ const EditForm = ({ purchase, prefill, onDone }: EditFormProps) => {
 
   return (
     <form onSubmit={submit} className="space-y-4 pt-2">
+      {purchase || base.assetId ? null : <DraftFiller onDraft={applyDraft} />}
+
       {item ? (
         <div className="bg-surface-muted/60 flex items-center gap-3 rounded-2xl p-2 pr-3">
           <ItemImage

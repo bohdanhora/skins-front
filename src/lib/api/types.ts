@@ -214,6 +214,12 @@ export interface Status {
   catalogItems: number;
   salesChecked: number;
   salesTotal: number;
+  csfloatQuota?: {
+    limit: number | null;
+    remaining: number | null;
+    resetAt: string | null;
+    pausedUntil: string | null;
+  };
 }
 
 export interface SalesDay {
@@ -558,4 +564,57 @@ export interface BettingOverview {
   standingsDate: string | null;
   sync: { running: boolean; pagesDone: number; pagesQueued: number; lastError: string | null };
   sources: { schedule: boolean; odds: boolean };
+}
+
+export interface AssistantProvider {
+  id: string;
+  label: string;
+  apiKeysUrl: string;
+  keyHint: string;
+  defaultModel: string;
+  models: string[];
+  webSearch: boolean;
+}
+
+export interface AssistantSettings {
+  provider: string | null;
+  model: string | null;
+  keyHint: string | null;
+  available: boolean;
+}
+
+export interface MatchBrief {
+  verdict: 'confirm' | 'caution' | 'avoid' | 'no_bet';
+  summary: string;
+  warnings: string[];
+  betCheck: { status: 'ok' | 'check'; reason: string };
+  lineups: { team1: string[]; team2: string[] };
+  sources: { url: string; title: string }[];
+  searched: boolean;
+  model: string;
+  createdAt: string;
+}
+
+export interface PurchaseDraft {
+  name: string | null;
+  known: boolean;
+  image: string | null;
+  rarityColor: string | null;
+  price: number | null;
+  float: number | null;
+  paintSeed: number | null;
+  stickers: string[];
+  market: string | null;
+}
+
+export interface SmartSearch {
+  q?: string;
+  category?: ItemCategory;
+  wear?: ItemWear;
+  edition?: ItemEdition;
+  phase?: MarketPhase;
+  minPrice?: number;
+  maxPrice?: number;
+  sort?: ItemSort;
+  note?: string;
 }

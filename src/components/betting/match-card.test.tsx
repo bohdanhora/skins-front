@@ -1,3 +1,4 @@
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 
@@ -83,7 +84,11 @@ describe('MatchCard', () => {
   });
 
   it('shows the forecast and the best bet', () => {
-    render(<MatchCard match={{ ...match, vetoes: [{ team: 1, step: 'ban', map: 'Anubis' }] }} />);
+    render(
+      <QueryClientProvider client={new QueryClient()}>
+        <MatchCard match={{ ...match, vetoes: [{ team: 1, step: 'ban', map: 'Anubis' }] }} />
+      </QueryClientProvider>,
+    );
 
     expect(screen.getByText('Победа Vitality')).toBeInTheDocument();
     expect(screen.getByText('1,95')).toBeInTheDocument();
@@ -94,5 +99,6 @@ describe('MatchCard', () => {
     expect(screen.getByText('Spirit −1,5 по картам')).toBeInTheDocument();
     expect(screen.getAllByText('не играет Anubis')).toHaveLength(2);
     expect(screen.getByText('бан Anubis', { exact: false })).toBeInTheDocument();
+    expect(screen.getByText('Подключи ассистента', { exact: false })).toBeInTheDocument();
   });
 });

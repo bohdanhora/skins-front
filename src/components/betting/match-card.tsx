@@ -8,6 +8,8 @@ import { formatDateTime } from '@/lib/format/time';
 import { formatLockLeft } from '@/lib/purchases/purchases';
 import { cn } from '@/lib/utils/cn';
 
+import { MatchBrief } from './match-brief';
+
 const TICK_MS = 60_000;
 const FAVORITES = 2;
 
@@ -357,6 +359,9 @@ export const MatchCard = ({ match }: { match: BetMatch }) => {
 
       {open ? (
         <div className="border-border bg-surface-muted/40 space-y-5 border-t px-4 py-4 sm:px-5">
+          <Section title="Новости и проверка ставки">
+            <MatchBrief match={match} />
+          </Section>
           <div className="grid gap-5 lg:grid-cols-2">
             <Section title="Прогноз вето">
               <Veto match={match} />

@@ -21,6 +21,9 @@ import {
 } from '@/lib/storage/settings';
 import { cn } from '@/lib/utils/cn';
 
+import { AssistantSettings } from './assistant-settings';
+import { describeCsfloatQuota } from './csfloat-pause';
+
 interface SettingsDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -180,6 +183,17 @@ export const SettingsDialog = ({ open, onOpenChange }: SettingsDialogProps) => {
           />
         </section>
 
+        <section className="space-y-3">
+          <div className="space-y-1">
+            <h3 className="text-sm font-semibold">Ассистент</h3>
+            <p className="text-foreground-muted text-[0.8125rem]">
+              Проверяет новости команд перед ставкой, заполняет покупку по скриншоту и ищет по
+              описанию. Все цифры по-прежнему считает SkinScout.
+            </p>
+          </div>
+          <AssistantSettings open={open} />
+        </section>
+
         {status.data ? (
           <section className="space-y-3">
             <h3 className="text-sm font-semibold">Площадки</h3>
@@ -200,6 +214,11 @@ export const SettingsDialog = ({ open, onOpenChange }: SettingsDialogProps) => {
                         {state.items.toLocaleString('ru-RU')} предметов в продаже, обновлено{' '}
                         {timeAgo(state.updatedAt)}
                       </p>
+                      {market === 'csfloat' && status.data.csfloatQuota ? (
+                        <p className="text-foreground-subtle text-xs">
+                          {describeCsfloatQuota(status.data.csfloatQuota)}
+                        </p>
+                      ) : null}
                     </div>
                     <span
                       className={cn(

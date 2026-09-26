@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 
 import { useStatus } from '@/lib/api/queries';
-import { timeAgo } from '@/lib/format/time';
+import { shortAgo, timeAgo } from '@/lib/format/time';
 import { cn } from '@/lib/utils/cn';
 
 const TICK_MS = 30_000;
@@ -42,13 +42,17 @@ export const StatusPill = ({ className }: { className?: string }) => {
   return (
     <span
       className={cn(pill, 'text-foreground-muted', className)}
-      title="Цены обновляются автоматически каждые несколько минут"
+      title={
+        updatedAt
+          ? `Цены обновлены ${timeAgo(updatedAt, now)}, обновляются каждые несколько минут`
+          : undefined
+      }
     >
       <span
         className={cn('size-2 rounded-full', refreshing ? 'bg-warning animate-pulse' : 'bg-gain')}
         aria-hidden
       />
-      {updatedAt ? `Цены: ${timeAgo(updatedAt, now)}` : 'Собираем цены...'}
+      {updatedAt ? `Цены: ${shortAgo(updatedAt, now)}` : 'Собираем цены...'}
     </span>
   );
 };

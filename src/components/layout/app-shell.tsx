@@ -18,6 +18,7 @@ import { useState, type ComponentType, type ReactNode } from 'react';
 import { cn } from '@/lib/utils/cn';
 
 import { AccountMenu } from './account-menu';
+import { CsfloatPause } from './csfloat-pause';
 import { Logo } from './logo';
 import { SettingsDialog } from './settings-dialog';
 import { StatusPill } from './status-pill';
@@ -80,6 +81,7 @@ export const AppShell = ({ children }: { children: ReactNode }) => {
           </nav>
 
           <div className="ml-auto flex items-center gap-2">
+            <CsfloatPause className="hidden md:inline-flex" />
             <StatusPill className="hidden sm:inline-flex" />
             <AccountMenu onOpenSettings={() => setSettingsOpen(true)} />
           </div>
@@ -90,7 +92,10 @@ export const AppShell = ({ children }: { children: ReactNode }) => {
         key={pathname}
         className="animate-rise mx-auto w-full max-w-7xl px-4 pt-4 pb-28 sm:px-6 lg:pt-8 lg:pb-16"
       >
-        <StatusPill className="mb-4 sm:hidden" />
+        <div className="mb-4 flex flex-wrap gap-2 md:hidden">
+          <StatusPill className="sm:hidden" />
+          <CsfloatPause />
+        </div>
         {children}
       </main>
 
