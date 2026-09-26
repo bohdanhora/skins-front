@@ -3,14 +3,14 @@ import type {
   ItemCategory,
   ItemEdition,
   ItemWear,
-  ListingMarketId,
   MarketId,
   MarketPhase,
+  SellMarketId,
   TradingMarketId,
 } from '@/lib/api/types';
 
 export const MARKETS: Record<
-  ListingMarketId,
+  MarketId,
   { name: string; short: string; dot: string; text: string; soft: string }
 > = {
   whiteMarket: {
@@ -30,13 +30,21 @@ export const MARKETS: Record<
   csfloat: {
     name: 'CSFloat',
     short: 'CSFloat',
-    dot: 'bg-[#4f8cff]',
-    text: 'text-[#4f8cff]',
-    soft: 'bg-[#4f8cff]/10',
+    dot: 'bg-market-cf',
+    text: 'text-market-cf',
+    soft: 'bg-market-cf-soft',
+  },
+  lisSkins: {
+    name: 'lis-skins',
+    short: 'lis-skins',
+    dot: 'bg-market-lis',
+    text: 'text-market-lis',
+    soft: 'bg-market-lis-soft',
   },
 };
 
-export const MARKET_ORDER: MarketId[] = ['whiteMarket', 'dmarket', 'csfloat'];
+export const MARKET_ORDER: MarketId[] = ['whiteMarket', 'dmarket', 'csfloat', 'lisSkins'];
+export const SELL_MARKET_ORDER: SellMarketId[] = ['whiteMarket', 'dmarket', 'csfloat'];
 export const TRADING_MARKET_ORDER: TradingMarketId[] = ['whiteMarket', 'dmarket'];
 
 export const MARKET_FILTERS: { value: 'all' | MarketId; label: string }[] = [
@@ -44,6 +52,7 @@ export const MARKET_FILTERS: { value: 'all' | MarketId; label: string }[] = [
   { value: 'whiteMarket', label: 'Дешевле на White' },
   { value: 'dmarket', label: 'Дешевле на DMarket' },
   { value: 'csfloat', label: 'Дешевле на CSFloat' },
+  { value: 'lisSkins', label: 'Дешевле на lis-skins' },
 ];
 
 export const WEAR_FILTERS: { value: 'all' | ItemWear; label: string }[] = [
@@ -74,15 +83,15 @@ export const PHASE_FILTERS: { value: 'all' | MarketPhase; label: string }[] = [
   { value: 'black-pearl', label: 'Black Pearl' },
 ];
 
-export const CATEGORIES: { value: ItemCategory; label: string }[] = [
-  { value: 'knife', label: 'Ножи' },
-  { value: 'gloves', label: 'Перчатки' },
-  { value: 'rifle', label: 'Винтовки' },
-  { value: 'sniper', label: 'Снайперские' },
-  { value: 'pistol', label: 'Пистолеты' },
-  { value: 'smg', label: 'ПП' },
-  { value: 'heavy', label: 'Тяжёлое' },
-  { value: 'sticker', label: 'Наклейки' },
+export const CATEGORIES: { value: ItemCategory; label: string; all?: string }[] = [
+  { value: 'knife', label: 'Ножи', all: 'Все ножи' },
+  { value: 'gloves', label: 'Перчатки', all: 'Все перчатки' },
+  { value: 'rifle', label: 'Винтовки', all: 'Все винтовки' },
+  { value: 'sniper', label: 'Снайперские', all: 'Все снайперские' },
+  { value: 'pistol', label: 'Пистолеты', all: 'Все пистолеты' },
+  { value: 'smg', label: 'ПП', all: 'Все пистолеты-пулемёты' },
+  { value: 'heavy', label: 'Тяжёлое', all: 'Всё тяжёлое' },
+  { value: 'sticker', label: 'Наклейки', all: 'Все наклейки' },
   { value: 'container', label: 'Кейсы' },
   { value: 'agent', label: 'Агенты' },
   { value: 'charm', label: 'Брелоки' },

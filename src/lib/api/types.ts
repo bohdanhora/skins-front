@@ -1,6 +1,7 @@
-export type MarketId = 'whiteMarket' | 'dmarket' | 'csfloat';
-export type TradingMarketId = Exclude<MarketId, 'csfloat'>;
-export type ListingMarketId = MarketId;
+export type MarketId = 'whiteMarket' | 'dmarket' | 'csfloat' | 'lisSkins';
+export type SellMarketId = Exclude<MarketId, 'lisSkins'>;
+export type TradingMarketId = Exclude<SellMarketId, 'csfloat'>;
+export type ListingMarketId = SellMarketId;
 export type MarketPhase =
   'phase-1' | 'phase-2' | 'phase-3' | 'phase-4' | 'ruby' | 'sapphire' | 'emerald' | 'black-pearl';
 export type ItemWear = 'FN' | 'MW' | 'FT' | 'WW' | 'BS';
@@ -31,7 +32,8 @@ export type ItemSort =
   | 'priceDesc'
   | 'name'
   | 'sales8w'
-  | 'score';
+  | 'score'
+  | 'belowSales';
 
 export interface MarketQuote {
   price: number | null;
@@ -86,6 +88,7 @@ export interface Item {
   whiteMarket: MarketQuote | null;
   dmarket: MarketQuote | null;
   csfloat: MarketQuote | null;
+  lisSkins?: MarketQuote | null;
   gap: PriceGap | null;
   flip: Flip | null;
   instant: Flip | null;
@@ -99,8 +102,15 @@ export interface ItemsPage {
   updatedAt: string | null;
 }
 
+export interface SubcategoryOption {
+  value: string;
+  image: string | null;
+  count: number;
+}
+
 export interface ItemFacets {
   collections: { name: string; image: string | null }[];
+  subcategories?: Partial<Record<ItemCategory, SubcategoryOption[]>>;
 }
 
 export interface ItemLibraryOption {
@@ -127,6 +137,7 @@ export interface ItemLibrary {
 export interface ItemsQuery {
   q?: string;
   category?: ItemCategory;
+  subcategory?: string;
   wear?: ItemWear;
   edition?: ItemEdition;
   phase?: MarketPhase;
@@ -180,7 +191,7 @@ export interface Listing {
 }
 
 export interface Listings {
-  sources: Record<MarketId, SourceState>;
+  sources: Record<ListingMarketId, SourceState>;
   listings: Listing[];
 }
 
@@ -195,6 +206,7 @@ export interface Status {
   whiteMarket: MarketStatus;
   dmarket: MarketStatus;
   csfloat: MarketStatus;
+  lisSkins?: MarketStatus;
   refreshing: boolean;
   comparedItems: number;
   catalogItems: number;
@@ -210,6 +222,7 @@ export interface SalesDay {
 
 export interface SalesChart {
   days: SalesDay[];
+  markets?: { dmarket: SalesDay[]; csfloat: SalesDay[] | null; whiteMarket?: SalesDay[] | null };
   stats: SalesStats | null;
 }
 
@@ -300,4 +313,62 @@ export interface SnipesQuery {
   minProfit?: number;
   specialOnly?: boolean;
   sort?: SnipeSort;
+}
+
+export interface SaleOption {
+  market: SellMarketId;
+  kind: 'listing' | 'instant';
+  price: number;
+  afterFee: number;
+  payout: number;
+}
+
+export interface InventoryItem {
+  assetIds: string[];
+  name: string;
+  marketHashName: string;
+  type: string;
+  image: string | null;
+  rarityColor: string | null;
+  float: number | null;
+  paintSeed: number | null;
+  phase: MarketPhase | null;
+  amount: number;
+  tradable: boolean;
+  marketable: boolean;
+  whiteMarket: MarketQuote | null;
+  dmarket: MarketQuote | null;
+  csfloat: MarketQuote | null;
+  options: SaleOption[];
+  best: SaleOption | null;
+  marketPrice: number | null;
+  sales: SalesStats | null;
+}
+
+export interface InventoryTotals {
+  marketPrice: number;
+  best: number;
+  listing: Record<SellMarketId, number>;
+  listingItems: Record<SellMarketId, number>;
+  instant: number;
+  instantItems: number;
+  items: number;
+  pricedItems: number;
+  unsellableItems: number;
+}
+
+export interface Inventory {
+  steamId: string;
+  name: string | null;
+  avatar: string | null;
+  fetchedAt: string;
+  totals: InventoryTotals;
+  items: InventoryItem[];
+}
+
+export interface SteamPrice {
+  lowest: number | null;
+  median: number | null;
+  volume: number;
+  url: string;
 }

@@ -14,7 +14,7 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   title: { default: 'SkinScout', template: '%s · SkinScout' },
-  description: 'Сравнение цен на скины CS2 на white.market, DMarket и CSFloat.',
+  description: 'Сравнение цен на скины CS2 на white.market, DMarket, CSFloat и lis-skins.',
   applicationName: 'SkinScout',
 };
 

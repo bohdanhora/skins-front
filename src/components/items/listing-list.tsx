@@ -4,7 +4,7 @@ import { ExternalLink, KeyRound, TriangleAlert } from 'lucide-react';
 
 import type { Listing, Listings, MarketId } from '@/lib/api/types';
 import { formatPercent, formatUsd } from '@/lib/format/money';
-import { MARKETS, MARKET_ORDER } from '@/lib/markets';
+import { MARKETS, SELL_MARKET_ORDER } from '@/lib/markets';
 import { cn } from '@/lib/utils/cn';
 
 import { ItemImage } from './item-image';
@@ -36,7 +36,7 @@ export const ListingList = ({ data, compact = false, deal = false }: ListingList
 );
 
 const SourceNotes = ({ sources }: { sources: Listings['sources'] }) => {
-  const notes = MARKET_ORDER.filter((market) => sources[market].status !== 'ok');
+  const notes = SELL_MARKET_ORDER.filter((market) => sources[market].status !== 'ok');
 
   if (notes.length === 0) {
     return null;

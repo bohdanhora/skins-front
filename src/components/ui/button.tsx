@@ -14,7 +14,8 @@ const buttonVariants = cva(
         ghost: 'text-foreground-muted hover:bg-surface-muted hover:text-foreground',
         whiteMarket: 'bg-market-wm-soft text-market-wm hover:brightness-95',
         dmarket: 'bg-market-dm-soft text-market-dm hover:brightness-95',
-        csfloat: 'bg-[#4f8cff]/10 text-[#4f8cff] hover:brightness-95',
+        csfloat: 'bg-market-cf-soft text-market-cf hover:brightness-95',
+        lisSkins: 'bg-market-lis-soft text-market-lis hover:brightness-95',
       },
       size: {
         sm: 'h-9 px-3 text-[0.8125rem]',

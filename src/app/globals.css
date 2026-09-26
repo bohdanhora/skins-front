@@ -32,6 +32,10 @@
   --market-wm-soft: #fce8ef;
   --market-dm: #6d4ce8;
   --market-dm-soft: #efeafd;
+  --market-cf: #0e8fb0;
+  --market-cf-soft: #e2f3f8;
+  --market-lis: #d97706;
+  --market-lis-soft: #fdf1e1;
 
   --ring: #2f6fed;
   --shadow-soft: 0 1px 2px rgb(26 27 30 / 0.05);
@@ -66,8 +70,12 @@
 
   --market-wm: #f2527f;
   --market-wm-soft: #2d1520;
-  --market-dm: #9a82f5;
+  --market-dm: #8a6ff0;
   --market-dm-soft: #1f1a36;
+  --market-cf: #1aa3c4;
+  --market-cf-soft: #10252c;
+  --market-lis: #c27f0e;
+  --market-lis-soft: #2a1f0f;
 
   --ring: #5b8ff5;
   --shadow-soft: 0 1px 2px rgb(0 0 0 / 0.4);
@@ -104,6 +112,10 @@
   --color-market-wm-soft: var(--market-wm-soft);
   --color-market-dm: var(--market-dm);
   --color-market-dm-soft: var(--market-dm-soft);
+  --color-market-cf: var(--market-cf);
+  --color-market-cf-soft: var(--market-cf-soft);
+  --color-market-lis: var(--market-lis);
+  --color-market-lis-soft: var(--market-lis-soft);
 
   --color-ring: var(--ring);
 
