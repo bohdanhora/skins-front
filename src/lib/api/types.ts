@@ -539,8 +539,18 @@ export interface BetMatch {
   confidence: 'high' | 'medium' | 'low';
 }
 
+export interface BetEvent {
+  id: number;
+  name: string;
+  image: string | null;
+  tier: string | null;
+  beginsAt: string | null;
+  endsAt: string | null;
+}
+
 export interface BettingOverview {
   matches: BetMatch[];
+  events: BetEvent[];
   mapsKnown: number;
   mapPool: string[];
   standingsDate: string | null;

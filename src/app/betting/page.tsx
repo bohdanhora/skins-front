@@ -2,6 +2,7 @@
 
 import { Loader2, SearchX, Swords } from 'lucide-react';
 
+import { EventStrip } from '@/components/betting/event-strip';
 import { MatchCard } from '@/components/betting/match-card';
 import { EmptyState } from '@/components/states/empty-state';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -39,6 +40,8 @@ const BettingPage = () => {
         ) : null}
       </section>
 
+      {data ? <EventStrip events={data.events} /> : null}
+
       {overview.isError && !data ? (
         <EmptyState
           icon={<SearchX className="size-6" aria-hidden />}
@@ -56,7 +59,7 @@ const BettingPage = () => {
           title="Крупных матчей пока нет"
           description={
             data.sources.schedule
-              ? 'Матчи появятся, когда турниры уровня S и A расставят соперников.'
+              ? 'Матчи появятся здесь, когда в турнирах расставят соперников.'
               : 'Не задан ключ расписания матчей на сервере.'
           }
         />
