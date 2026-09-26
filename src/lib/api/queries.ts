@@ -12,6 +12,7 @@ import { useFees, useWithdrawals } from '@/lib/storage/settings';
 import { apiGet } from './client';
 import type {
   BlueGemSearch,
+  BlueValue,
   CheapestPattern,
   PatternImages,
   TradeUpCatalog,
@@ -209,6 +210,16 @@ export const useCheapestPatterns = (name: string, enabled: boolean) =>
       apiGet<{ listings: CheapestPattern[] }>('/items/blue-gems/cheapest', { name }, signal),
     enabled,
     staleTime: 5 * 60_000,
+  });
+
+export const useBlueValue = (name: string, paintSeed: number | null, enabled: boolean) =>
+  useQuery({
+    queryKey: ['blue-value', name, paintSeed],
+    queryFn: ({ signal }) =>
+      apiGet<BlueValue>('/items/blue-gems/value', { name, paintSeed: paintSeed ?? 0 }, signal),
+    enabled: enabled && paintSeed !== null,
+    staleTime: 30 * 60_000,
+    retry: false,
   });
 
 export const usePatternImages = (name: string | null) =>

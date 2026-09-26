@@ -6,6 +6,7 @@ import { ItemImage } from '@/components/items/item-image';
 import { ItemTitle } from '@/components/items/item-title';
 import { Button } from '@/components/ui/button';
 import type { Item, SellMarketId } from '@/lib/api/types';
+import { isCaseHardened } from '@/lib/format/blue';
 import { formatFloat } from '@/lib/format/float';
 import { formatPercent, formatSignedUsd, formatUsd } from '@/lib/format/money';
 import { daysBetween, formatDate, formatDateTime, plural } from '@/lib/format/time';
@@ -24,6 +25,7 @@ import {
 } from '@/lib/purchases/purchases';
 import { cn } from '@/lib/utils/cn';
 
+import { BlueValuePanel } from './blue-value-panel';
 import { usePurchaseForm } from './purchase-form';
 import { purchaseMarketDot, purchaseMarketName } from './purchase-shared';
 
@@ -177,6 +179,10 @@ export const PurchaseRow = ({
           />
         </div>
       </div>
+
+      {isCaseHardened(purchase.name) && purchase.paintSeed !== null ? (
+        <BlueValuePanel purchase={purchase} fees={fees} withdrawals={withdrawals} />
+      ) : null}
 
       <div className="relative flex flex-col gap-2 sm:flex-row sm:items-center">
         {advice ? (

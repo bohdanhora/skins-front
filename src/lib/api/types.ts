@@ -400,6 +400,30 @@ export interface BlueGemListing {
   url: string;
 }
 
+export interface BlueSale {
+  name: string;
+  price: number;
+  ratio: number;
+  paintSeed: number;
+  float: number;
+  blue: BlueShare;
+  soldAt: string;
+}
+
+export interface BlueValue {
+  blue: BlueShare;
+  source: 'csfloat' | 'calculator';
+  market: number | null;
+  multiplier: number | null;
+  estimate: number | null;
+  premium: number | null;
+  band: [number, number];
+  comparableCount: number;
+  checked: number;
+  spanDays: number | null;
+  sales: BlueSale[];
+}
+
 export interface CheapestPattern {
   market: MarketId;
   price: number;
