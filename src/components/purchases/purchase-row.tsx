@@ -6,7 +6,6 @@ import { ItemImage } from '@/components/items/item-image';
 import { ItemTitle } from '@/components/items/item-title';
 import { Button } from '@/components/ui/button';
 import type { Item, SellMarketId } from '@/lib/api/types';
-import { isCaseHardened } from '@/lib/format/blue';
 import { formatFloat } from '@/lib/format/float';
 import { formatPercent, formatSignedUsd, formatUsd } from '@/lib/format/money';
 import { daysBetween, formatDate, formatDateTime, plural } from '@/lib/format/time';
@@ -23,12 +22,13 @@ import {
   type Purchase,
   type SellOption,
 } from '@/lib/purchases/purchases';
+import { withPremium } from '@/lib/purchases/valuation';
 import { cn } from '@/lib/utils/cn';
 
-import { BlueValuePanel } from './blue-value-panel';
-import { PurchaseExtras } from './purchase-extras';
+import { PriceStrip } from './price-strip';
 import { usePurchaseForm } from './purchase-form';
 import { purchaseMarketDot, purchaseMarketName } from './purchase-shared';
+import { usePurchaseValuation } from './use-purchase-valuation';
 
 const ADVICE_TONES = {
   gain: 'bg-gain-soft text-gain',
@@ -63,7 +63,7 @@ const Cell = ({ label, dot, option, best, amount, detail }: CellProps) => (
           {formatSignedUsd(option.profit * amount)}
         </p>
         <p className="text-foreground-subtle numeric text-[0.6875rem]">
-          на руки {formatUsd(option.payout * amount)}
+          {option.kind === 'instant' ? 'продать' : 'выставить'} за {formatUsd(option.price)}
         </p>
       </>
     ) : (
@@ -123,7 +123,9 @@ export const PurchaseRow = ({
   onOpen,
 }: PurchaseRowProps) => {
   const form = usePurchaseForm();
-  const options = item ? sellOptions(item, purchase.price, fees, withdrawals) : [];
+  const valuation = usePurchaseValuation(purchase, item, fees, withdrawals);
+  const priced = item ? withPremium(item, valuation.total.mid) : undefined;
+  const options = priced ? sellOptions(priced, purchase.price, fees, withdrawals) : [];
   const best = bestOption(options);
   const advice = item ? sellAdvice(best, marketPrice(item), item.sales) : null;
   const listing = (market: SellMarketId) =>
@@ -176,16 +178,12 @@ export const PurchaseRow = ({
             option={instant}
             best={isBest(instant)}
             amount={purchase.amount}
-            detail={instant ? `скупают за ${formatUsd(instant.price)}` : ''}
+            detail={instant ? `на руки ${formatUsd(instant.payout * purchase.amount)}` : ''}
           />
         </div>
       </div>
 
-      {isCaseHardened(purchase.name) && purchase.paintSeed !== null ? (
-        <BlueValuePanel purchase={purchase} fees={fees} withdrawals={withdrawals} />
-      ) : null}
-
-      <PurchaseExtras purchase={purchase} />
+      <PriceStrip valuation={valuation} amount={purchase.amount} />
 
       <div className="relative flex flex-col gap-2 sm:flex-row sm:items-center">
         {advice ? (
@@ -196,7 +194,6 @@ export const PurchaseRow = ({
             )}
           >
             {advice.text}
-            {best && best.profit > 0 ? `, лучше на ${MARKETS[best.market].name}` : ''}
             {best ? ` (${formatPercent(best.percent, true)})` : ''}
           </p>
         ) : (
