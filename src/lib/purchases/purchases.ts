@@ -1,4 +1,6 @@
 import type { Item, MarketId, SalesStats, SellMarketId } from '@/lib/api/types';
+import { WEAR_RANGES } from '@/lib/format/float';
+import { parseItemName } from '@/lib/format/item-name';
 import { SELL_MARKET_ORDER } from '@/lib/markets';
 
 export type PurchaseMarket = MarketId | 'steam' | 'other';
@@ -23,6 +25,7 @@ export interface Purchase {
   float: number | null;
   paintSeed: number | null;
   note: string;
+  stickers: string[];
   assetId: string | null;
   sale: PurchaseSale | null;
 }
@@ -284,6 +287,7 @@ export const parseBackup = (raw: string): PurchaseInput[] | null => {
         float: null,
         paintSeed: null,
         note: '',
+        stickers: [],
         assetId: null,
         sale: null,
         ...entry,
@@ -293,3 +297,22 @@ export const parseBackup = (raw: string): PurchaseInput[] | null => {
     return null;
   }
 };
+
+const LOW_FLOAT_SHARE = 0.3;
+
+export const lowFloatRange = (name: string, float: number | null): [number, number] | null => {
+  const wear = parseItemName(name).wear;
+
+  if (!wear || float === null) return null;
+
+  const [from, to] = WEAR_RANGES[wear];
+
+  return float >= from && float < from + (to - from) * LOW_FLOAT_SHARE ? [from, float] : null;
+};
+
+export const STICKER_PREMIUM: [number, number] = [0.03, 0.1];
+
+export const stickerPremium = (value: number): [number, number] => [
+  Math.round(value * STICKER_PREMIUM[0]),
+  Math.round(value * STICKER_PREMIUM[1]),
+];

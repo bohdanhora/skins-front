@@ -8,6 +8,7 @@ import {
   findPurchase,
   formatLockLeft,
   lockLeft,
+  lowFloatRange,
   parseBackup,
   payoutFor,
   sellAdvice,
@@ -58,6 +59,7 @@ const purchase = (extra: Partial<Purchase> = {}): Purchase => ({
   float: 0.2512,
   paintSeed: 661,
   note: '',
+  stickers: [],
   assetId: null,
   sale: null,
   ...extra,
@@ -162,6 +164,16 @@ describe('findPurchase', () => {
   });
 });
 
+describe('lowFloatRange', () => {
+  it('flags floats in the lower part of their wear', () => {
+    expect(lowFloatRange('AK-47 | Nouveau Rouge (Minimal Wear)', 0.085673)).toEqual([
+      0.07, 0.085673,
+    ]);
+    expect(lowFloatRange('AK-47 | Nouveau Rouge (Minimal Wear)', 0.14)).toBeNull();
+    expect(lowFloatRange('Sticker | Natus Vincere (Holo) | Cologne 2014', 0.01)).toBeNull();
+  });
+});
+
 describe('parseBackup', () => {
   it('reads an exported file and fills missing fields', () => {
     const [entry] = parseBackup(
@@ -172,6 +184,7 @@ describe('parseBackup', () => {
 
     expect(entry.amount).toBe(1);
     expect(entry.sale).toBeNull();
+    expect(entry.stickers).toEqual([]);
     expect(entry).not.toHaveProperty('id');
   });
 

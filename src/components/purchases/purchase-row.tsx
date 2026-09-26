@@ -26,6 +26,7 @@ import {
 import { cn } from '@/lib/utils/cn';
 
 import { BlueValuePanel } from './blue-value-panel';
+import { PurchaseExtras } from './purchase-extras';
 import { usePurchaseForm } from './purchase-form';
 import { purchaseMarketDot, purchaseMarketName } from './purchase-shared';
 
@@ -183,6 +184,8 @@ export const PurchaseRow = ({
       {isCaseHardened(purchase.name) && purchase.paintSeed !== null ? (
         <BlueValuePanel purchase={purchase} fees={fees} withdrawals={withdrawals} />
       ) : null}
+
+      <PurchaseExtras purchase={purchase} />
 
       <div className="relative flex flex-col gap-2 sm:flex-row sm:items-center">
         {advice ? (

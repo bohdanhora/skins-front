@@ -18,9 +18,17 @@ interface StickerPickerProps {
   selected: string[];
   onChange: (next: string[]) => void;
   max: number;
+  allowRepeats?: boolean;
+  placeholder?: string;
 }
 
-export const StickerPicker = ({ selected, onChange, max }: StickerPickerProps) => {
+export const StickerPicker = ({
+  selected,
+  onChange,
+  max,
+  allowRepeats = false,
+  placeholder = 'Найди наклейку: navi katowice 2019',
+}: StickerPickerProps) => {
   const [q, setQ] = useState('');
   const search = useDebouncedValue(q, 250);
   const suggestions = useItems(
@@ -28,7 +36,7 @@ export const StickerPicker = ({ selected, onChange, max }: StickerPickerProps) =
     { enabled: search.trim().length >= 2 },
   );
   const found = (suggestions.data?.pages[0]?.items ?? []).filter(
-    (item) => !selected.includes(item.name),
+    (item) => allowRepeats || !selected.includes(item.name),
   );
   const full = selected.length >= max;
 
@@ -36,15 +44,15 @@ export const StickerPicker = ({ selected, onChange, max }: StickerPickerProps) =
     <div className="space-y-3">
       {selected.length > 0 ? (
         <div className="flex flex-wrap gap-2">
-          {selected.map((name) => (
+          {selected.map((name, index) => (
             <span
-              key={name}
+              key={`${name}-${index}`}
               className="bg-accent-soft text-accent inline-flex h-9 items-center gap-1.5 rounded-full pr-1.5 pl-3.5 text-sm font-medium"
             >
               {stickerLabel(name)}
               <button
                 type="button"
-                onClick={() => onChange(selected.filter((entry) => entry !== name))}
+                onClick={() => onChange(selected.filter((_, position) => position !== index))}
                 aria-label={`Убрать ${stickerLabel(name)}`}
                 className="hover:bg-accent/10 rounded-full p-1"
               >
@@ -59,9 +67,7 @@ export const StickerPicker = ({ selected, onChange, max }: StickerPickerProps) =
         <SearchField
           value={q}
           onChange={setQ}
-          placeholder={
-            full ? `Можно выбрать до ${max} наклеек` : 'Найди наклейку: navi katowice 2019'
-          }
+          placeholder={full ? `Можно выбрать до ${max} наклеек` : placeholder}
           className="h-12 text-base"
         />
         {!full && search.trim().length >= 2 && found.length > 0 ? (

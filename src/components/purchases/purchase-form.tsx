@@ -15,6 +15,7 @@ import { ItemImage } from '@/components/items/item-image';
 import { ItemPicker } from '@/components/items/item-picker';
 import { ItemTitle } from '@/components/items/item-title';
 import { SteamLoginButton } from '@/components/layout/account-menu';
+import { StickerPicker } from '@/components/stickers/sticker-picker';
 import { Button } from '@/components/ui/button';
 import { Dialog } from '@/components/ui/dialog';
 import { Input, MoneyInput, parseMoney } from '@/components/ui/input';
@@ -108,6 +109,7 @@ const EditForm = ({ purchase, prefill, onDone }: EditFormProps) => {
   const [float, setFloat] = useState(base.float != null ? String(base.float) : '');
   const [paintSeed, setPaintSeed] = useState(base.paintSeed != null ? String(base.paintSeed) : '');
   const [note, setNote] = useState(base.note ?? '');
+  const [stickers, setStickers] = useState<string[]>(base.stickers ?? []);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const save = useSavePurchase();
@@ -149,6 +151,7 @@ const EditForm = ({ purchase, prefill, onDone }: EditFormProps) => {
           float: floatValue,
           paintSeed: seed,
           note: note.trim(),
+          stickers,
           assetId: base.assetId ?? null,
           sale: purchase?.sale ?? null,
         },
@@ -233,6 +236,17 @@ const EditForm = ({ purchase, prefill, onDone }: EditFormProps) => {
         <div className="text-foreground-subtle flex items-end pb-3 text-xs">
           {unlockAt && lock !== '0' ? `Можно продать с ${formatDateTime(unlockAt)}` : null}
         </div>
+      </div>
+
+      <div className="space-y-1.5">
+        <span className="text-foreground-muted text-[0.8125rem]">Наклейки</span>
+        <StickerPicker
+          selected={stickers}
+          onChange={setStickers}
+          max={5}
+          allowRepeats
+          placeholder="Добавь наклейку, если есть"
+        />
       </div>
 
       <Field label="Заметка">
