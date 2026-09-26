@@ -38,6 +38,26 @@ export const offerLabel = (offer: BetOffer, match: BetMatch): string => {
   return `${offer.side === 1 ? 'Больше' : 'Меньше'} ${String(offer.line).replace('.', ',')} карт`;
 };
 
+const FAVORITES = 2;
+
+const Habits = ({ team }: { team: BetTeam }) => {
+  const favorites = team.habits.filter((habit) => habit.share > 0).slice(0, FAVORITES);
+  const bans = team.habits.filter((habit) => habit.permaban);
+
+  if (favorites.length === 0 && bans.length === 0) return null;
+
+  return (
+    <p className="text-foreground-subtle truncate text-[0.6875rem]">
+      {favorites.map((habit) => `${habit.map} ${pct(habit.share)}`).join(', ')}
+      {bans.length > 0 ? (
+        <span className="text-loss">
+          {favorites.length > 0 ? ' · ' : ''}не играет {bans.map((habit) => habit.map).join(', ')}
+        </span>
+      ) : null}
+    </p>
+  );
+};
+
 const TeamBlock = ({ team, align }: { team: BetTeam; align: 'left' | 'right' }) => (
   <div
     className={cn(
@@ -53,6 +73,7 @@ const TeamBlock = ({ team, align }: { team: BetTeam; align: 'left' | 'right' }) 
       <p className="text-foreground-subtle text-xs">
         {team.rank ? `#${team.rank} в рейтинге Valve` : 'вне рейтинга Valve'}
       </p>
+      <Habits team={team} />
     </div>
   </div>
 );

@@ -483,6 +483,7 @@ export interface BetTeam {
   points: number | null;
   roster: string[];
   mapGames: number;
+  habits: { map: string; share: number; permaban: boolean }[];
 }
 
 export interface BetMapRecord {

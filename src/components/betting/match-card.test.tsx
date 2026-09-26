@@ -28,6 +28,11 @@ const team = (name: string, rank: number) => ({
   points: 1800,
   roster: [],
   mapGames: 60,
+  habits: [
+    { map: 'Nuke', share: 0.31, permaban: false },
+    { map: 'Mirage', share: 0.22, permaban: false },
+    { map: 'Anubis', share: 0, permaban: true },
+  ],
 });
 
 const match: BetMatch = {
@@ -82,6 +87,7 @@ describe('MatchCard', () => {
     expect(screen.getByText('Победа Vitality за 1,95 на pinnacle')).toBeInTheDocument();
     expect(screen.getByText('пик Spirit', { exact: false })).toBeInTheDocument();
     expect(screen.getByText('6–4')).toBeInTheDocument();
+    expect(screen.getAllByText('не играет Anubis', { exact: false })).toHaveLength(2);
 
     fireEvent.click(screen.getByText('Все ставки (2)'));
     expect(screen.getByText('Spirit −1,5 по картам')).toBeInTheDocument();
