@@ -23,6 +23,7 @@ const offer = (extra: Partial<BetOffer>): BetOffer => ({
 
 const team = (name: string, rank: number) => ({
   name,
+  acronym: name.slice(0, 3).toUpperCase(),
   image: null,
   rank,
   points: 1800,
@@ -82,14 +83,16 @@ describe('MatchCard', () => {
   });
 
   it('shows the forecast and the best bet', () => {
-    render(<MatchCard match={match} />);
+    render(<MatchCard match={{ ...match, vetoes: [{ team: 1, step: 'ban', map: 'Anubis' }] }} />);
 
-    expect(screen.getByText('Победа Vitality за 1,95 на pinnacle')).toBeInTheDocument();
-    expect(screen.getByText('пик Spirit', { exact: false })).toBeInTheDocument();
-    expect(screen.getByText('6–4')).toBeInTheDocument();
-    expect(screen.getAllByText('не играет Anubis', { exact: false })).toHaveLength(2);
+    expect(screen.getByText('Победа Vitality')).toBeInTheDocument();
+    expect(screen.getByText('1,95')).toBeInTheDocument();
+    expect(screen.getByText('пик SPI')).toBeInTheDocument();
+    expect(screen.getByText('скорее 2:0 · 34%')).toBeInTheDocument();
 
-    fireEvent.click(screen.getByText('Все ставки (2)'));
+    fireEvent.click(screen.getByLabelText('Разбор матча'));
     expect(screen.getByText('Spirit −1,5 по картам')).toBeInTheDocument();
+    expect(screen.getAllByText('не играет Anubis')).toHaveLength(2);
+    expect(screen.getByText('бан Anubis', { exact: false })).toBeInTheDocument();
   });
 });

@@ -478,6 +478,7 @@ export interface TradeUpCatalog {
 
 export interface BetTeam {
   name: string;
+  acronym: string | null;
   image: string | null;
   rank: number | null;
   points: number | null;
