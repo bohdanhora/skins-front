@@ -7,11 +7,12 @@ import {
   type InfiniteData,
 } from '@tanstack/react-query';
 
-import { useFees } from '@/lib/storage/settings';
+import { useFees, useWithdrawals } from '@/lib/storage/settings';
 
 import { apiGet } from './client';
 import type {
   FloatSearch,
+  Inventory,
   Item,
   ItemFacets,
   ItemLibrary,
@@ -22,6 +23,7 @@ import type {
   SnipesPage,
   SnipesQuery,
   Status,
+  SteamPrice,
 } from './types';
 
 const PAGE_SIZE = 24;
@@ -191,3 +193,39 @@ export const useSnipes = (query: SnipesQuery) => {
     refetchInterval: SNIPES_POLL_MS,
   });
 };
+
+export const useInventory = (profile: string, refreshKey: number) => {
+  const fees = useFees();
+  const withdrawals = useWithdrawals();
+
+  return useQuery({
+    queryKey: ['inventory', profile, fees, withdrawals, refreshKey],
+    queryFn: ({ signal }) =>
+      apiGet<Inventory>(
+        '/inventory',
+        {
+          profile,
+          refresh: refreshKey > 0 ? true : undefined,
+          feeWhiteMarket: fees.whiteMarket,
+          feeDmarket: fees.dmarket,
+          feeCsfloat: fees.csfloat,
+          withdrawWhiteMarket: withdrawals.whiteMarket,
+          withdrawDmarket: withdrawals.dmarket,
+          withdrawCsfloat: withdrawals.csfloat,
+        },
+        signal,
+      ),
+    enabled: profile.trim() !== '',
+    placeholderData: keepPreviousData,
+    retry: false,
+  });
+};
+
+export const useSteamPrice = (name: string, enabled: boolean) =>
+  useQuery({
+    queryKey: ['steam-price', name],
+    queryFn: ({ signal }) => apiGet<SteamPrice>('/items/steam', { name }, signal),
+    enabled,
+    staleTime: 15 * 60_000,
+    retry: false,
+  });
