@@ -4,6 +4,7 @@ import {
   Backpack,
   BookOpen,
   Flame,
+  FlaskConical,
   Gauge,
   Heart,
   Search,
@@ -35,6 +36,7 @@ const MAIN_NAV: NavItem[] = [
   { href: '/library' as Route, label: 'Библиотека', icon: BookOpen },
   { href: '/float', label: 'Флоат', icon: Gauge },
   { href: '/stickers', label: 'Наклейки', icon: Sticker },
+  { href: '/craft' as Route, label: 'Крафт', icon: FlaskConical },
 ];
 
 const PERSONAL_NAV: NavItem[] = [
