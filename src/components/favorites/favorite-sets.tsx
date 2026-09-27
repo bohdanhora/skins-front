@@ -45,7 +45,7 @@ const SetCard = ({ set, prices }: { set: FavoriteSet; prices: Map<string, Item> 
   };
 
   return (
-    <article className="bg-surface overflow-hidden rounded-3xl shadow-[var(--shadow-card)]">
+    <article className="bg-surface rounded-3xl shadow-[var(--shadow-card)]">
       <header className="flex flex-wrap items-start justify-between gap-3 p-4 sm:p-5">
         <div className="min-w-0 space-y-1">
           {renaming ? (
