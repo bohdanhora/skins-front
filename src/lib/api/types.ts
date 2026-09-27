@@ -664,3 +664,10 @@ export interface FloatPicks {
   checked: number;
   csfloatPausedUntil: string | null;
 }
+
+export interface FavoriteSet {
+  id: string;
+  name: string;
+  items: string[];
+  updatedAt: string;
+}

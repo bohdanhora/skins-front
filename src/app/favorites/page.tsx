@@ -4,9 +4,11 @@ import { Heart } from 'lucide-react';
 import Link from 'next/link';
 
 import { useRememberedState } from '@/hooks/use-remembered-state';
+import { FavoriteSets } from '@/components/favorites/favorite-sets';
 import { ItemGrid } from '@/components/items/item-grid';
 import { EmptyState } from '@/components/states/empty-state';
 import { Button } from '@/components/ui/button';
+import { Segmented } from '@/components/ui/segmented';
 import { Select } from '@/components/ui/select';
 import { useItems } from '@/lib/api/queries';
 import type { ItemSort } from '@/lib/api/types';
@@ -24,6 +26,7 @@ const SORTS: { value: ItemSort; label: string }[] = [
 const FavoritesPage = () => {
   const { favorites } = useFavorites();
   const [sort, setSort] = useRememberedState<ItemSort>('favorites.sort', 'name');
+  const [tab, setTab] = useRememberedState<'items' | 'sets'>('favorites.tab', 'items');
   const items = useItems({ names: favorites, sort }, { enabled: favorites.length > 0 });
 
   const empty = (
@@ -45,10 +48,10 @@ const FavoritesPage = () => {
         <div className="space-y-2">
           <h1 className="page-title">Избранное</h1>
           <p className="text-foreground-muted text-[0.9375rem]">
-            Свежие цены на предметы, за которыми ты следишь.
+            Свежие цены на предметы, за которыми ты следишь, и наборы вроде ножа с перчатками.
           </p>
         </div>
-        {favorites.length > 0 ? (
+        {tab === 'items' && favorites.length > 0 ? (
           <Select
             value={sort}
             onChange={setSort}
@@ -59,7 +62,24 @@ const FavoritesPage = () => {
         ) : null}
       </section>
 
-      {favorites.length === 0 ? empty : <ItemGrid query={items} mode="all" empty={empty} />}
+      <Segmented
+        value={tab}
+        onChange={setTab}
+        label="Что показать"
+        options={[
+          { value: 'items', label: 'Предметы' },
+          { value: 'sets', label: 'Наборы' },
+        ]}
+        className="sm:w-72"
+      />
+
+      {tab === 'sets' ? (
+        <FavoriteSets />
+      ) : favorites.length === 0 ? (
+        empty
+      ) : (
+        <ItemGrid query={items} mode="all" empty={empty} />
+      )}
     </div>
   );
 };

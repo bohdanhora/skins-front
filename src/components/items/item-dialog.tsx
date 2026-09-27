@@ -14,6 +14,7 @@ import type { Route } from 'next';
 import Link from 'next/link';
 import type { ReactNode } from 'react';
 
+import { AddToSetButton } from '@/components/favorites/add-to-set';
 import { usePurchaseForm } from '@/components/purchases/purchase-form';
 import { Button } from '@/components/ui/button';
 import { Dialog } from '@/components/ui/dialog';
@@ -94,6 +95,7 @@ const ItemDetails = ({ item, onNavigate }: { item: Item; onNavigate: () => void 
             ) : null}
             <FavoriteButton name={item.name} className="bg-surface-muted" />
             <RecordPurchaseButton item={item} onNavigate={onNavigate} />
+            <AddToSetButton name={item.name} />
           </div>
           <OwnPurchases name={item.name} />
         </div>
