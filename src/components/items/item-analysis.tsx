@@ -2,9 +2,10 @@
 
 import { ExternalLink, Loader2, Minus, Plus, Sparkles } from 'lucide-react';
 
+import { SteamLoginButton } from '@/components/layout/account-menu';
 import { Button } from '@/components/ui/button';
 import { useSessionToken } from '@/lib/api/account';
-import { useItemAnalysis } from '@/lib/api/assistant';
+import { useAssistantSettings, useItemAnalysis } from '@/lib/api/assistant';
 import type { ItemAnalysis, MarketId } from '@/lib/api/types';
 import { formatFloat, formatRange } from '@/lib/format/float';
 import { formatUsd } from '@/lib/format/money';
@@ -103,8 +104,8 @@ export const ItemAnalysisPanel = ({ name }: { name: string }) => {
   const signedIn = useSessionToken() !== null;
   const fees = useFees();
   const analysis = useItemAnalysis();
-
-  if (!signedIn) return null;
+  const settings = useAssistantSettings();
+  const ready = signedIn && !!settings.data?.provider;
 
   const run = (refresh: boolean) =>
     analysis.mutate({
@@ -125,7 +126,7 @@ export const ItemAnalysisPanel = ({ name }: { name: string }) => {
         <Button
           variant="secondary"
           size="sm"
-          disabled={analysis.isPending}
+          disabled={analysis.isPending || !ready}
           onClick={() => run(analysis.data !== undefined)}
         >
           {analysis.isPending ? <Loader2 className="size-4 animate-spin" aria-hidden /> : null}
@@ -133,6 +134,18 @@ export const ItemAnalysisPanel = ({ name }: { name: string }) => {
         </Button>
       </div>
 
+      {!signedIn ? (
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <p className="text-foreground-muted text-[0.8125rem]">
+            Войди, чтобы ИИ оценил покупку от 1 до 100.
+          </p>
+          <SteamLoginButton />
+        </div>
+      ) : settings.data && !settings.data.provider ? (
+        <p className="text-foreground-muted text-[0.8125rem]">
+          Подключи ассистента в настройках, чтобы ИИ оценил покупку от 1 до 100.
+        </p>
+      ) : null}
       {analysis.isPending ? (
         <p className="text-foreground-muted text-[0.8125rem]">
           Смотрим флоат, паттерн, продажи и перепродажу, это до минуты
