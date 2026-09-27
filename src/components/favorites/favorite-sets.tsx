@@ -3,6 +3,7 @@
 import { Check, Layers, Pencil, Plus, X } from 'lucide-react';
 import { useState, type FormEvent } from 'react';
 
+import { canGenerate, GenerateButton } from '@/components/items/generate-button';
 import { useOpenItem } from '@/components/items/item-dialog-provider';
 import { ItemImage } from '@/components/items/item-image';
 import { ItemPicker } from '@/components/items/item-picker';
@@ -150,6 +151,14 @@ const SetCard = ({ set, prices }: { set: FavoriteSet; prices: Map<string, Item> 
                 >
                   <X className="size-3.5" aria-hidden />
                 </button>
+                {item && canGenerate(item.category) ? (
+                  <GenerateButton
+                    name={itemName}
+                    suggest
+                    compact
+                    className="absolute right-1 bottom-1.5"
+                  />
+                ) : null}
               </li>
             );
           })}

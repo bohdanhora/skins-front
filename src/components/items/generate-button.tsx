@@ -17,6 +17,7 @@ interface GenerateButtonProps {
   seed?: number | null;
   stickers?: string[];
   suggest?: boolean;
+  compact?: boolean;
   className?: string;
 }
 
@@ -45,6 +46,7 @@ export const GenerateButton = ({
   seed,
   stickers,
   suggest = false,
+  compact = false,
   className,
 }: GenerateButtonProps) => {
   const [open, setOpen] = useState(false);
@@ -57,9 +59,14 @@ export const GenerateButton = ({
             type="button"
             aria-label="Сгенерировать"
             title="Сгенерировать"
-            className="press bg-surface/80 text-foreground-subtle hover:text-foreground flex size-9 items-center justify-center rounded-full backdrop-blur"
+            className={cn(
+              'press text-foreground-subtle hover:text-foreground flex items-center justify-center',
+              compact
+                ? 'hover:bg-surface size-6 rounded-lg'
+                : 'bg-surface/80 size-9 rounded-full backdrop-blur',
+            )}
           >
-            <Wand2 className="size-[1.125rem]" aria-hidden />
+            <Wand2 className={compact ? 'size-3.5' : 'size-[1.125rem]'} aria-hidden />
           </button>
         </Popover.Trigger>
         <Popover.Portal>

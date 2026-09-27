@@ -4,6 +4,7 @@ import { ArrowRight, CheckCircle2, ChevronDown, Lock, Pencil } from 'lucide-reac
 import { useState, type ReactNode } from 'react';
 
 import { FloatBar } from '@/components/floats/float-bar';
+import { canGenerate, GenerateButton } from '@/components/items/generate-button';
 import { ItemImage } from '@/components/items/item-image';
 import { ItemTitle } from '@/components/items/item-title';
 import { stickerLabel } from '@/components/stickers/sticker-picker';
@@ -286,7 +287,15 @@ export const PurchaseRow = ({
           >
             Продал
           </Button>
-          <div className="flex gap-1">
+          <div className="flex items-center gap-1">
+            {!item || canGenerate(item.category) ? (
+              <GenerateButton
+                name={purchase.name}
+                float={purchase.float}
+                seed={purchase.paintSeed}
+                stickers={purchase.stickers}
+              />
+            ) : null}
             <Button
               variant="ghost"
               size="sm"
