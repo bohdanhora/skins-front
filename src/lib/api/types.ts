@@ -668,6 +668,7 @@ export interface FloatPick {
   market: string;
   price: number;
   float: number;
+  paintSeed: number | null;
   url: string;
   worseCheapest: number | null;
   saving: number;
