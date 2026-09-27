@@ -19,7 +19,7 @@ import { useBlueGemWeapons, useBlueGems } from '@/lib/api/queries';
 
 import { BluePicks } from './blue-picks';
 import type { BlueGemListing, BlueGemSearch, BlueGemWear } from '@/lib/api/types';
-import { blueSourceLabel, formatBlue } from '@/lib/format/blue';
+import { blueSourceLabel, formatBlue, measuredBlue } from '@/lib/format/blue';
 import { formatFloat } from '@/lib/format/float';
 import { parseItemName } from '@/lib/format/item-name';
 import { formatPercent, formatUsd } from '@/lib/format/money';
@@ -91,7 +91,7 @@ export const BlueGemPanel = () => {
 
       return (
         (source === 'all' || listing.market === source) &&
-        (blueFloor === undefined || listing.blue.playside >= blueFloor) &&
+        (blueFloor === undefined || measuredBlue(listing).playside >= blueFloor) &&
         (priceCap === undefined ||
           (listing.price !== null && listing.price <= Math.round(priceCap * 100))) &&
         (overpayCap === undefined || (percent !== null && percent <= overpayCap))
@@ -106,7 +106,7 @@ export const BlueGemPanel = () => {
       return [...rows].sort(
         (left, right) =>
           (overpay(left) ?? Infinity) - (overpay(right) ?? Infinity) ||
-          right.blue.playside - left.blue.playside,
+          measuredBlue(right).playside - measuredBlue(left).playside,
       );
     }
 
@@ -128,7 +128,8 @@ export const BlueGemPanel = () => {
       <p className="text-foreground-muted max-w-2xl text-[0.9375rem] leading-relaxed">
         Case Hardened со всех площадок, отсортированные по доле синего. Основной процент считается
         по текстуре паттерна, как на csgoskins.gg и Skinport: у AK-47 это верх и магазин, а не
-        стороны. CSFloat меряет лицо и зад модели в игре, поэтому его цифры другие.
+        стороны. CSFloat меряет лицо и зад модели в игре, поэтому его цифры другие. Паттерны с
+        цифрой CSFloat идут первыми и сортируются и фильтруются по ней.
       </p>
 
       <FilterBar>
@@ -361,7 +362,7 @@ const BlueGemRow = ({
         <span className="bg-surface-muted mt-1.5 block h-1.5 overflow-hidden rounded-full">
           <span
             className="bg-accent block h-full rounded-full"
-            style={{ width: `${Math.min(100, listing.blue.playside)}%` }}
+            style={{ width: `${Math.min(100, measuredBlue(listing).playside)}%` }}
           />
         </span>
       </button>

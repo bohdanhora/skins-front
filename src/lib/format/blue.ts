@@ -20,6 +20,11 @@ export const formatBlue = (
 export const blueSourceLabel = (source: BlueSource): string =>
   source === 'csfloat' ? 'CSFloat, по модели в игре' : 'по текстуре, как csgoskins.gg и Skinport';
 
+export const measuredBlue = (listing: {
+  blue: BlueShare;
+  csfloatBlue: BlueShare | null;
+}): BlueShare => listing.csfloatBlue ?? listing.blue;
+
 const CASE_HARDENED = /\| Case Hardened( \(|$)/;
 
 export const isCaseHardened = (name: string): boolean => CASE_HARDENED.test(name);
