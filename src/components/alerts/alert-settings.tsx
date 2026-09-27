@@ -56,9 +56,16 @@ export const AlertSettings = () => {
           Показывать и когда вкладка свёрнута
         </Button>
       ) : null}
-      {enabled && permission === 'denied' ? (
+      {enabled && permission !== 'granted' ? (
         <p className="text-foreground-subtle text-xs">
-          Системные уведомления запрещены в браузере, сообщения видны только на открытой вкладке.
+          {permission === 'denied' ? 'Системные уведомления запрещены в браузере. ' : ''}
+          Без них на свёрнутой вкладке сделка отметится в её названии, а карточка будет ждать на
+          странице.
+        </p>
+      ) : null}
+      {enabled && permission === 'granted' ? (
+        <p className="text-foreground-subtle text-xs">
+          Системные уведомления включены, приходят и когда вкладка свёрнута.
         </p>
       ) : null}
     </div>

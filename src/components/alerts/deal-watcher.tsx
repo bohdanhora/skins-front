@@ -42,20 +42,36 @@ export const useDealAlertsMinPrice = () =>
 
 type ShownAlert = DealAlert & { shownAt: number };
 
-const notifySystem = (alert: DealAlert) => {
-  if (
-    typeof Notification === 'undefined' ||
-    Notification.permission !== 'granted' ||
-    !document.hidden
-  ) {
-    return;
+const TITLE_MARK = /^\(\d+\) Сделка · /;
+
+const markTitle = (count: number) => {
+  const base = document.title.replace(TITLE_MARK, '');
+
+  document.title = count > 0 ? `(${count}) Сделка · ${base}` : base;
+};
+
+const notifySystem = (alert: DealAlert, open: (name: string) => void): boolean => {
+  if (typeof Notification === 'undefined' || Notification.permission !== 'granted') {
+    return false;
   }
 
-  new Notification(alert.name, {
-    body: `${formatUsd(alert.price)} · ${alert.reason}`,
-    icon: alert.image ?? undefined,
-    tag: alert.key,
-  });
+  try {
+    const notice = new Notification(alert.name, {
+      body: `${formatUsd(alert.price)} · ${alert.reason}`,
+      icon: alert.image ?? undefined,
+      tag: alert.key,
+    });
+
+    notice.onclick = () => {
+      window.focus();
+      open(alert.name);
+      notice.close();
+    };
+
+    return true;
+  } catch {
+    return false;
+  }
 };
 
 export const DealWatcher = () => {
@@ -65,19 +81,12 @@ export const DealWatcher = () => {
   const fees = useFees();
   const openItem = useOpenItem();
   const [alerts, setAlerts] = useState<ShownAlert[]>([]);
-  const state = useRef({ favorites, fees, minPrice });
+  const unseen = useRef(0);
+  const state = useRef({ favorites, fees, minPrice, openItem });
 
-  state.current = { favorites, fees, minPrice };
+  state.current = { favorites, fees, minPrice, openItem };
 
   const check = useCallback(async () => {
-    if (
-      document.hidden &&
-      typeof Notification !== 'undefined' &&
-      Notification.permission !== 'granted'
-    ) {
-      return;
-    }
-
     const { favorites: names, fees: current, minPrice: floor } = state.current;
     const [top, followed] = await Promise.all([
       apiGet<ItemsPage>('/items', {
@@ -117,12 +126,28 @@ export const DealWatcher = () => {
             ...list.filter((entry) => entry.name !== confirmed.name),
           ].slice(0, SHOWN),
         );
-        notifySystem(confirmed);
+        if (document.hidden) {
+          notifySystem(confirmed, state.current.openItem);
+          unseen.current += 1;
+          markTitle(unseen.current);
+        }
         break;
       }
     }
 
     writeLocal(SEEN_KEY, seen);
+  }, []);
+
+  useEffect(() => {
+    const onVisible = () => {
+      if (document.hidden) return;
+
+      unseen.current = 0;
+      markTitle(0);
+    };
+
+    document.addEventListener('visibilitychange', onVisible);
+    return () => document.removeEventListener('visibilitychange', onVisible);
   }, []);
 
   useEffect(() => {
