@@ -7,6 +7,7 @@ import { formatPercent, formatUsd } from '@/lib/format/money';
 import { MARKETS, SELL_MARKET_ORDER } from '@/lib/markets';
 import { cn } from '@/lib/utils/cn';
 
+import { GenerateButton } from './generate-button';
 import { ItemImage } from './item-image';
 
 interface ListingListProps {
@@ -132,6 +133,11 @@ const ListingRow = ({
       </div>
       <div className="flex flex-col items-end gap-1.5">
         <span className="flex items-center gap-2">
+          <GenerateButton
+            name={listing.name}
+            float={listing.float ? Number(listing.float) : null}
+            stickers={listing.stickers.map((sticker) => sticker.name)}
+          />
           <span className="numeric text-[0.9375rem] font-semibold">{formatUsd(listing.price)}</span>
           <ExternalLink className="text-foreground-subtle size-3.5" aria-hidden />
         </span>

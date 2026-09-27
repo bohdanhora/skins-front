@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { useEffect, useMemo } from 'react';
 
 import { useRememberedState } from '@/hooks/use-remembered-state';
+import { canGenerate, GenerateButton } from '@/components/items/generate-button';
 import { ItemImage } from '@/components/items/item-image';
 import { ItemTitle } from '@/components/items/item-title';
 import { EmptyState } from '@/components/states/empty-state';
@@ -259,7 +260,7 @@ const LibraryPage = () => {
                         <p className="numeric mt-2 text-base font-semibold">
                           от {formatUsd(variant.price)}
                         </p>
-                        <div className="mt-3 flex flex-wrap gap-2">
+                        <div className="mt-3 flex flex-wrap items-center gap-2">
                           <Button asChild size="sm" variant="secondary">
                             <Link href={`/search?q=${encodeURIComponent(variant.name)}` as Route}>
                               Цены
@@ -275,6 +276,7 @@ const LibraryPage = () => {
                               <ArrowRight className="size-3.5" aria-hidden />
                             </Link>
                           </Button>
+                          {canGenerate(category) ? <GenerateButton name={variant.name} /> : null}
                         </div>
                       </div>
                     </article>

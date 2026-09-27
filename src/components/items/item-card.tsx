@@ -11,6 +11,7 @@ import { timeAgo } from '@/lib/format/time';
 import { BenefitBadge } from './benefit-badge';
 import { CheapestPatterns } from './cheapest-patterns';
 import { FavoriteButton } from './favorite-button';
+import { canGenerate, GenerateButton } from './generate-button';
 import { ItemImage } from './item-image';
 import { ItemTitle } from './item-title';
 import { PriceRows } from './price-rows';
@@ -47,6 +48,9 @@ export const ItemCard = ({ item, mode, onOpen }: ItemCardProps) => {
         />
       </div>
       <FavoriteButton name={item.name} className="absolute top-5 right-5 z-10" />
+      {canGenerate(item.category) ? (
+        <GenerateButton name={item.name} suggest className="absolute top-5 right-16 z-10" />
+      ) : null}
       {fresh && mode !== 'all' ? (
         <span className="bg-accent text-accent-foreground pointer-events-none absolute top-5 left-5 z-10 flex items-center gap-1 rounded-full px-2 py-0.5 text-[0.6875rem] font-semibold">
           <Clock className="size-3" aria-hidden />

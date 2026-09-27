@@ -6,6 +6,7 @@ import { useMemo, useRef } from 'react';
 import { useRememberedState } from '@/hooks/use-remembered-state';
 
 import { FilterBar } from '@/components/items/filters';
+import { GenerateButton } from '@/components/items/generate-button';
 import { PatternPreview } from '@/components/items/pattern-preview';
 import { EmptyState } from '@/components/states/empty-state';
 import { Button } from '@/components/ui/button';
@@ -18,7 +19,7 @@ import { useBlueGemWeapons, useBlueGems } from '@/lib/api/queries';
 
 import { BluePicks } from './blue-picks';
 import type { BlueGemListing, BlueGemSearch, BlueGemWear } from '@/lib/api/types';
-import { blueSidesLabel, formatBlue } from '@/lib/format/blue';
+import { blueSourceLabel, formatBlue } from '@/lib/format/blue';
 import { formatFloat } from '@/lib/format/float';
 import { parseItemName } from '@/lib/format/item-name';
 import { formatPercent, formatUsd } from '@/lib/format/money';
@@ -125,9 +126,9 @@ export const BlueGemPanel = () => {
   return (
     <div className="space-y-6">
       <p className="text-foreground-muted max-w-2xl text-[0.9375rem] leading-relaxed">
-        Case Hardened со всех площадок, отсортированные по доле синего. Процент считается по
-        паттерну: первое число для лицевой стороны (у AK-47 для верха), второе для обратной (у AK-47
-        для магазина).
+        Case Hardened со всех площадок, отсортированные по доле синего. Основной процент считается
+        по текстуре паттерна, как на csgoskins.gg и Skinport: у AK-47 это верх и магазин, а не
+        стороны. CSFloat меряет лицо и зад модели в игре, поэтому его цифры другие.
       </p>
 
       <FilterBar>
@@ -372,11 +373,16 @@ const BlueGemRow = ({
       >
         <div className="min-w-0 flex-1 text-xs">
           <p
-            title={blueSidesLabel(listing.name)}
+            title={blueSourceLabel('calculator')}
             className="text-accent numeric text-sm font-semibold"
           >
-            {formatBlue(listing.blue)}
+            {formatBlue(listing.name, listing.blue)}
           </p>
+          {listing.csfloatBlue ? (
+            <p title={blueSourceLabel('csfloat')} className="text-foreground-muted numeric mt-0.5">
+              CSFloat: {formatBlue(listing.name, listing.csfloatBlue, 'csfloat')}
+            </p>
+          ) : null}
           <p className="text-foreground-muted mt-0.5 flex flex-wrap items-center gap-x-2">
             <span className="flex items-center gap-1.5">
               <span className={cn('size-2 rounded-full', market.dot)} aria-hidden />
@@ -395,7 +401,8 @@ const BlueGemRow = ({
             </div>
           ) : null}
         </div>
-        <div className="text-right whitespace-nowrap">
+        <GenerateButton name={listing.name} float={listing.float} seed={listing.paintSeed} />
+        <div className="w-44 shrink-0 text-right whitespace-nowrap">
           <p className="numeric text-[0.9375rem] font-semibold">
             {listing.price !== null ? formatUsd(listing.price) : listing.priceLabel}
           </p>

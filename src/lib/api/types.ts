@@ -404,6 +404,7 @@ export interface BlueGemListing {
   float: number | null;
   paintSeed: number;
   blue: BlueShare;
+  csfloatBlue: BlueShare | null;
   floorPrice: number | null;
   url: string;
 }
@@ -670,4 +671,15 @@ export interface FavoriteSet {
   name: string;
   items: string[];
   updatedAt: string;
+}
+
+export interface InspectGen {
+  name: string;
+  float: number;
+  seed: number;
+  console: string;
+  link: string;
+  server: string;
+  gen: string;
+  missingStickers: string[];
 }

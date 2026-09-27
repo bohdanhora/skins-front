@@ -5,6 +5,7 @@ import { useState } from 'react';
 
 import { useRememberedState } from '@/hooks/use-remembered-state';
 import { BlueShareTag } from '@/components/items/blue-share-tag';
+import { GenerateButton } from '@/components/items/generate-button';
 import { Segmented } from '@/components/ui/segmented';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useFloatSearch } from '@/lib/api/queries';
@@ -15,6 +16,7 @@ import type {
   ListingMarketId,
   SteamFloatListing,
 } from '@/lib/api/types';
+import { rankByValue } from '@/lib/float-value';
 import { formatFloat, formatRange, type FloatRange } from '@/lib/format/float';
 import { formatSignedUsd, formatUsd } from '@/lib/format/money';
 import { plural } from '@/lib/format/time';
@@ -23,8 +25,10 @@ import { cn } from '@/lib/utils/cn';
 
 import { FloatBar } from './float-bar';
 
-type Order = 'price' | 'float';
+type Order = 'value' | 'price' | 'float';
 type Source = 'all' | ListingMarketId;
+
+const MIN_DISCOUNT = 0.03;
 
 interface FloatResultsProps {
   name: string;
@@ -34,7 +38,7 @@ interface FloatResultsProps {
 
 export const FloatResults = ({ name, range, zoom }: FloatResultsProps) => {
   const search = useFloatSearch({ name, floatFrom: range.from, floatTo: range.to });
-  const [order, setOrder] = useRememberedState<Order>('floatResults.order', 'price');
+  const [order, setOrder] = useRememberedState<Order>('floatResults.order', 'value');
   const [source, setSource] = useState<Source>('all');
 
   if (search.isPending) {
@@ -55,11 +59,16 @@ export const FloatResults = ({ name, range, zoom }: FloatResultsProps) => {
     ...data.whiteMarket.listings,
     ...data.csfloat.listings,
   ];
+  const ranked = rankByValue(allListings);
+  const valued = new Map(ranked.map((entry) => [entry.listing, entry]));
+  const discount = (listing: FloatListing): number => valued.get(listing)?.discount ?? -Infinity;
   const listings = allListings
     .filter((listing) => source === 'all' || listing.market === source)
-    .sort((left, right) =>
-      order === 'price' ? left.price - right.price : (left.float ?? 1) - (right.float ?? 1),
-    );
+    .sort((left, right) => {
+      if (order === 'value') return discount(right) - discount(left) || left.price - right.price;
+
+      return order === 'price' ? left.price - right.price : (left.float ?? 1) - (right.float ?? 1);
+    });
   const best = [...listings].sort((left, right) => left.price - right.price)[0];
 
   return (
@@ -93,6 +102,7 @@ export const FloatResults = ({ name, range, zoom }: FloatResultsProps) => {
               value={order}
               onChange={setOrder}
               options={[
+                { value: 'value', label: 'Выгоднее' },
                 { value: 'price', label: 'Дешевле' },
                 { value: 'float', label: 'Ниже флоат' },
               ]}
@@ -125,6 +135,7 @@ export const FloatResults = ({ name, range, zoom }: FloatResultsProps) => {
                 name={name}
                 zoom={zoom}
                 cheapest={listing === best}
+                typical={valued.get(listing)?.typical ?? null}
               />
             ))}
           </ul>
@@ -286,7 +297,8 @@ const SteamListingRow = ({
         </p>
         {listing.blue ? <BlueShareTag blue={listing.blue} name={name} /> : null}
       </div>
-      <div className="text-right whitespace-nowrap">
+      <GenerateButton name={name} float={listing.float} seed={listing.paintSeed} />
+      <div className="w-24 shrink-0 text-right whitespace-nowrap">
         <p className="numeric text-[0.9375rem] font-semibold">
           {listing.price !== null ? formatUsd(listing.price) : listing.priceLabel}
         </p>
@@ -353,40 +365,59 @@ const ListingRow = ({
   name,
   zoom,
   cheapest,
+  typical,
 }: {
   listing: FloatListing;
   name: string;
   zoom: FloatRange | null;
   cheapest: boolean;
-}) => (
-  <li>
-    <a
-      href={listing.url}
-      target="_blank"
-      rel="noreferrer"
-      className={cn(
-        'hover:bg-surface-muted flex items-center gap-4 px-4 py-3 transition-colors',
-        cheapest ? 'bg-gain-soft/50' : '',
-      )}
-    >
-      <div className="w-28 shrink-0 space-y-1.5 sm:w-40">
-        <p className="numeric text-sm font-semibold">
-          {listing.float !== null ? formatFloat(listing.float, 6) : 'без флоата'}
-        </p>
-        {listing.float !== null ? (
-          <FloatBar value={listing.float} zoom={zoom ?? undefined} />
+  typical: number | null;
+}) => {
+  const below = typical !== null ? (typical - listing.price) / typical : 0;
+
+  return (
+    <li>
+      <a
+        href={listing.url}
+        target="_blank"
+        rel="noreferrer"
+        className={cn(
+          'hover:bg-surface-muted flex items-center gap-4 px-4 py-3 transition-colors',
+          cheapest ? 'bg-gain-soft/50' : '',
+        )}
+      >
+        <div className="w-28 shrink-0 space-y-1.5 sm:w-40">
+          <p className="numeric text-sm font-semibold">
+            {listing.float !== null ? formatFloat(listing.float, 6) : 'без флоата'}
+          </p>
+          {listing.float !== null ? (
+            <FloatBar value={listing.float} zoom={zoom ?? undefined} />
+          ) : null}
+        </div>
+        <div className="text-foreground-muted min-w-0 flex-1 text-xs">
+          <p className="flex items-center gap-1.5">
+            <span className={cn('size-2 rounded-full', MARKETS[listing.market].dot)} aria-hidden />
+            {MARKETS[listing.market].name}
+          </p>
+          {listing.paintSeed !== null ? (
+            <p className="mt-0.5">паттерн {listing.paintSeed}</p>
+          ) : null}
+          {listing.blue ? <BlueShareTag blue={listing.blue} name={name} /> : null}
+        </div>
+        {below >= MIN_DISCOUNT ? (
+          <span className="bg-gain-soft text-gain numeric rounded-lg px-2 py-1 text-xs font-semibold">
+            −{Math.round(below * 100)}%
+          </span>
         ) : null}
-      </div>
-      <div className="text-foreground-muted min-w-0 flex-1 text-xs">
-        <p className="flex items-center gap-1.5">
-          <span className={cn('size-2 rounded-full', MARKETS[listing.market].dot)} aria-hidden />
-          {MARKETS[listing.market].name}
-        </p>
-        {listing.paintSeed !== null ? <p className="mt-0.5">паттерн {listing.paintSeed}</p> : null}
-        {listing.blue ? <BlueShareTag blue={listing.blue} name={name} /> : null}
-      </div>
-      <span className="numeric text-[0.9375rem] font-semibold">{formatUsd(listing.price)}</span>
-      <ExternalLink className="text-foreground-subtle size-3.5 shrink-0" aria-hidden />
-    </a>
-  </li>
-);
+        <GenerateButton name={name} float={listing.float} seed={listing.paintSeed} />
+        <div className="w-24 shrink-0 text-right whitespace-nowrap">
+          <p className="numeric text-[0.9375rem] font-semibold">{formatUsd(listing.price)}</p>
+          {typical !== null && below >= MIN_DISCOUNT ? (
+            <p className="text-foreground-subtle numeric text-xs">обычно {formatUsd(typical)}</p>
+          ) : null}
+        </div>
+        <ExternalLink className="text-foreground-subtle size-3.5 shrink-0" aria-hidden />
+      </a>
+    </li>
+  );
+};

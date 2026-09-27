@@ -14,6 +14,7 @@ import type {
   BettingOverview,
   BlueGemSearch,
   BlueValue,
+  InspectGen,
   CheapestPattern,
   PatternImages,
   TradeUpCatalog,
@@ -220,6 +221,18 @@ export const useBlueValue = (name: string, paintSeed: number | null, enabled: bo
       apiGet<BlueValue>('/items/blue-gems/value', { name, paintSeed: paintSeed ?? 0 }, signal),
     enabled: enabled && paintSeed !== null,
     staleTime: 30 * 60_000,
+    retry: false,
+  });
+
+export const useInspectGen = (
+  params: { name: string; float?: number; seed?: number; stickers?: string[] },
+  enabled: boolean,
+) =>
+  useQuery({
+    queryKey: ['inspect-gen', params],
+    queryFn: ({ signal }) => apiGet<InspectGen>('/items/gen', params, signal),
+    enabled,
+    staleTime: Infinity,
     retry: false,
   });
 
