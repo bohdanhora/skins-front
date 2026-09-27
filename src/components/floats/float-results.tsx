@@ -6,6 +6,7 @@ import { useState } from 'react';
 import { useRememberedState } from '@/hooks/use-remembered-state';
 import { BlueShareTag } from '@/components/items/blue-share-tag';
 import { GenerateButton } from '@/components/items/generate-button';
+import { BoughtButton } from '@/components/purchases/bought-button';
 import { Segmented } from '@/components/ui/segmented';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useFloatSearch } from '@/lib/api/queries';
@@ -20,6 +21,7 @@ import { rankByValue } from '@/lib/float-value';
 import { formatFloat, formatRange, type FloatRange } from '@/lib/format/float';
 import { formatSignedUsd, formatUsd } from '@/lib/format/money';
 import { plural } from '@/lib/format/time';
+import { useBoughtLots } from '@/lib/purchases/bought-lots';
 import { MARKETS } from '@/lib/markets';
 import { cn } from '@/lib/utils/cn';
 
@@ -40,6 +42,7 @@ export const FloatResults = ({ name, range, zoom }: FloatResultsProps) => {
   const search = useFloatSearch({ name, floatFrom: range.from, floatTo: range.to });
   const [order, setOrder] = useRememberedState<Order>('floatResults.order', 'value');
   const [source, setSource] = useState<Source>('all');
+  const bought = useBoughtLots();
 
   if (search.isPending) {
     return <Skeleton className="h-72 rounded-3xl" />;
@@ -63,7 +66,9 @@ export const FloatResults = ({ name, range, zoom }: FloatResultsProps) => {
   const valued = new Map(ranked.map((entry) => [entry.listing, entry]));
   const discount = (listing: FloatListing): number => valued.get(listing)?.discount ?? -Infinity;
   const listings = allListings
-    .filter((listing) => source === 'all' || listing.market === source)
+    .filter(
+      (listing) => (source === 'all' || listing.market === source) && !bought.has(listing.url),
+    )
     .sort((left, right) => {
       if (order === 'value') return discount(right) - discount(left) || left.price - right.price;
 
@@ -410,6 +415,17 @@ const ListingRow = ({
           </span>
         ) : null}
         <GenerateButton name={name} float={listing.float} seed={listing.paintSeed} />
+        <BoughtButton
+          compact
+          lot={{
+            name,
+            market: listing.market,
+            price: listing.price,
+            float: listing.float,
+            paintSeed: listing.paintSeed,
+            url: listing.url,
+          }}
+        />
         <div className="w-24 shrink-0 text-right whitespace-nowrap">
           <p className="numeric text-[0.9375rem] font-semibold">{formatUsd(listing.price)}</p>
           {typical !== null && below >= MIN_DISCOUNT ? (

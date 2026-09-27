@@ -328,6 +328,11 @@ export interface Snipe {
   listingUrl: string;
 }
 
+export interface LiveCheck {
+  changed: string[];
+  checkedAt: string;
+}
+
 export interface SnipesPage {
   items: Snipe[];
   total: number;

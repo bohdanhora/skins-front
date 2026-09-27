@@ -1,11 +1,13 @@
 'use client';
 
 import { ArrowDown, ExternalLink, Search } from 'lucide-react';
+import type { Ref } from 'react';
 
 import { BlueShareTag } from '@/components/items/blue-share-tag';
 import { canGenerate, GenerateButton } from '@/components/items/generate-button';
 import { ItemImage } from '@/components/items/item-image';
 import { ItemTitle } from '@/components/items/item-title';
+import { BoughtButton } from '@/components/purchases/bought-button';
 import { Button } from '@/components/ui/button';
 import type { Snipe } from '@/lib/api/types';
 import { formatFloat, formatRange } from '@/lib/format/float';
@@ -42,14 +44,18 @@ export const snipeReason = (snipe: Snipe): string => {
 interface SnipeCardProps {
   snipe: Snipe;
   onCheck: (snipe: Snipe) => void;
+  ref?: Ref<HTMLElement>;
 }
 
-export const SnipeCard = ({ snipe, onCheck }: SnipeCardProps) => {
+export const SnipeCard = ({ snipe, onCheck, ref }: SnipeCardProps) => {
   const market = MARKETS[snipe.source];
   const orderMarket = MARKETS[snipe.orderMarket];
 
   return (
-    <article className="bg-surface flex flex-col rounded-3xl p-4 shadow-[var(--shadow-card)]">
+    <article
+      ref={ref}
+      className="bg-surface flex flex-col rounded-3xl p-4 shadow-[var(--shadow-card)]"
+    >
       <div className="flex items-center gap-3">
         <ItemImage
           src={snipe.image}
@@ -120,11 +126,23 @@ export const SnipeCard = ({ snipe, onCheck }: SnipeCardProps) => {
         <span className="text-foreground-subtle text-xs">проверено {timeAgo(snipe.checkedAt)}</span>
       </div>
 
-      <div className="mt-4 grid grid-cols-2 gap-2">
+      <div className="mt-4 grid grid-cols-3 gap-2">
         <Button variant="secondary" size="sm" onClick={() => onCheck(snipe)}>
           <Search className="size-3.5" aria-hidden />
           Проверить
         </Button>
+        <BoughtButton
+          lot={{
+            name: snipe.name,
+            image: snipe.image,
+            rarityColor: snipe.rarityColor,
+            market: snipe.source,
+            price: snipe.listingPrice,
+            float: snipe.float,
+            paintSeed: snipe.paintSeed,
+            url: snipe.listingUrl,
+          }}
+        />
         <Button asChild variant={snipe.source} size="sm">
           <a href={snipe.listingUrl} target="_blank" rel="noreferrer">
             Открыть

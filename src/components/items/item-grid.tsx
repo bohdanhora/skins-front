@@ -8,7 +8,9 @@ import { EmptyState } from '@/components/states/empty-state';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import type { DealMode, ItemsPage } from '@/lib/api/types';
-import { plural } from '@/lib/format/time';
+import { useLiveCheck } from '@/hooks/use-live-check';
+import { useVisibleNames } from '@/hooks/use-visible-names';
+import { plural, timeAgo } from '@/lib/format/time';
 
 import { ItemCard } from './item-card';
 import { useOpenItem } from './item-dialog-provider';
@@ -20,10 +22,19 @@ interface ItemGridProps {
   toolbar?: ReactNode;
 }
 
+const CHECK_EVERY_MS = 30_000;
+
 const GRID = 'grid grid-cols-1 gap-4 min-[420px]:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4';
 
 export const ItemGrid = ({ query, mode, empty, toolbar }: ItemGridProps) => {
   const openItem = useOpenItem();
+  const { observe, visible } = useVisibleNames();
+  const checkedAt = useLiveCheck(
+    '/items/check',
+    mode === 'all' ? [] : visible,
+    'items',
+    CHECK_EVERY_MS,
+  );
 
   if (query.isPending) {
     return <GridSkeleton />;
@@ -63,13 +74,24 @@ export const ItemGrid = ({ query, mode, empty, toolbar }: ItemGridProps) => {
           {query.isFetching && !query.isFetchingNextPage ? (
             <Loader2 className="ml-2 inline size-3.5 animate-spin" aria-hidden />
           ) : null}
+          {checkedAt && mode !== 'all' ? (
+            <span className="text-foreground-subtle ml-2 text-xs">
+              цены на экране сверены {timeAgo(checkedAt)}
+            </span>
+          ) : null}
         </p>
         {toolbar}
       </div>
 
       <div className={GRID}>
         {items.map((item) => (
-          <ItemCard key={item.name} item={item} mode={mode} onOpen={openItem} />
+          <ItemCard
+            key={item.name}
+            ref={observe(item.name)}
+            item={item}
+            mode={mode}
+            onOpen={openItem}
+          />
         ))}
       </div>
 

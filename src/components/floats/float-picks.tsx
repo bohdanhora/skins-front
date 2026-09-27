@@ -3,11 +3,13 @@
 import { ExternalLink, Loader2, Sparkles } from 'lucide-react';
 
 import { GenerateButton } from '@/components/items/generate-button';
+import { BoughtButton } from '@/components/purchases/bought-button';
 import { Button } from '@/components/ui/button';
 import { useSessionToken } from '@/lib/api/account';
 import { useFloatPicks } from '@/lib/api/assistant';
 import { formatFloat } from '@/lib/format/float';
 import { formatSignedUsd, formatUsd } from '@/lib/format/money';
+import { useBoughtLots } from '@/lib/purchases/bought-lots';
 import { useFees } from '@/lib/storage/settings';
 
 const MARKET_NAMES: Record<string, string> = {
@@ -27,6 +29,7 @@ export const FloatPicks = ({ name, floatFrom, floatTo }: FloatPicksProps) => {
   const signedIn = useSessionToken() !== null;
   const fees = useFees();
   const picks = useFloatPicks();
+  const bought = useBoughtLots();
 
   if (!signedIn) return null;
 
@@ -66,45 +69,58 @@ export const FloatPicks = ({ name, floatFrom, floatTo }: FloatPicksProps) => {
 
       {data && data.picks.length > 0 ? (
         <ol className="space-y-2">
-          {data.picks.map((pick) => (
-            <li key={pick.url} className="bg-surface-muted/60 rounded-2xl px-3 py-2.5">
-              <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-                <p className="numeric min-w-0 flex-1 text-[0.8125rem] font-semibold">
-                  {formatUsd(pick.price)} · флоат {formatFloat(pick.float, 5)}
-                  {pick.paintSeed !== null ? ` · паттерн ${pick.paintSeed}` : ''}
+          {data.picks
+            .filter((pick) => !bought.has(pick.url))
+            .map((pick) => (
+              <li key={pick.url} className="bg-surface-muted/60 rounded-2xl px-3 py-2.5">
+                <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                  <p className="numeric min-w-0 flex-1 text-[0.8125rem] font-semibold">
+                    {formatUsd(pick.price)} · флоат {formatFloat(pick.float, 5)}
+                    {pick.paintSeed !== null ? ` · паттерн ${pick.paintSeed}` : ''}
+                  </p>
+                  {pick.saving > 0 ? (
+                    <span className="bg-gain-soft text-gain numeric rounded-full px-2 py-0.5 text-xs font-semibold">
+                      {formatUsd(pick.saving)} дешевле худших флоатов
+                    </span>
+                  ) : null}
+                  {pick.orderProfit !== null && pick.orderProfit > 0 ? (
+                    <span className="bg-accent-soft text-accent numeric rounded-full px-2 py-0.5 text-xs font-semibold">
+                      заявка {formatSignedUsd(pick.orderProfit)}
+                    </span>
+                  ) : null}
+                  <a
+                    href={pick.url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-foreground-muted hover:text-foreground flex items-center gap-1 text-xs"
+                  >
+                    {MARKET_NAMES[pick.market] ?? pick.market}
+                    <ExternalLink className="size-3" aria-hidden />
+                  </a>
+                  <GenerateButton name={name} float={pick.float} seed={pick.paintSeed} compact />
+                  <BoughtButton
+                    compact
+                    lot={{
+                      name,
+                      market: pick.market,
+                      price: pick.price,
+                      float: pick.float,
+                      paintSeed: pick.paintSeed,
+                      url: pick.url,
+                    }}
+                  />
+                </div>
+                <p className="text-foreground-muted numeric mt-1 text-xs">
+                  {pick.worseCheapest !== null
+                    ? `самый дешёвый лот с худшим флоатом ${formatUsd(pick.worseCheapest)}`
+                    : 'лотов с худшим флоатом мало для сравнения'}
+                  {pick.orderPrice !== null
+                    ? ` · заявка на такой флоат ${formatUsd(pick.orderPrice)}, после комиссии ${formatSignedUsd(pick.orderProfit ?? 0)}`
+                    : ''}
                 </p>
-                {pick.saving > 0 ? (
-                  <span className="bg-gain-soft text-gain numeric rounded-full px-2 py-0.5 text-xs font-semibold">
-                    {formatUsd(pick.saving)} дешевле худших флоатов
-                  </span>
-                ) : null}
-                {pick.orderProfit !== null && pick.orderProfit > 0 ? (
-                  <span className="bg-accent-soft text-accent numeric rounded-full px-2 py-0.5 text-xs font-semibold">
-                    заявка {formatSignedUsd(pick.orderProfit)}
-                  </span>
-                ) : null}
-                <a
-                  href={pick.url}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="text-foreground-muted hover:text-foreground flex items-center gap-1 text-xs"
-                >
-                  {MARKET_NAMES[pick.market] ?? pick.market}
-                  <ExternalLink className="size-3" aria-hidden />
-                </a>
-                <GenerateButton name={name} float={pick.float} seed={pick.paintSeed} compact />
-              </div>
-              <p className="text-foreground-muted numeric mt-1 text-xs">
-                {pick.worseCheapest !== null
-                  ? `самый дешёвый лот с худшим флоатом ${formatUsd(pick.worseCheapest)}`
-                  : 'лотов с худшим флоатом мало для сравнения'}
-                {pick.orderPrice !== null
-                  ? ` · заявка на такой флоат ${formatUsd(pick.orderPrice)}, после комиссии ${formatSignedUsd(pick.orderProfit ?? 0)}`
-                  : ''}
-              </p>
-              {pick.reason ? <p className="mt-1 text-[0.8125rem]">{pick.reason}</p> : null}
-            </li>
-          ))}
+                {pick.reason ? <p className="mt-1 text-[0.8125rem]">{pick.reason}</p> : null}
+              </li>
+            ))}
         </ol>
       ) : null}
 

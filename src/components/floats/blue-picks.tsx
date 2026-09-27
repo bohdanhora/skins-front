@@ -2,6 +2,7 @@
 
 import { ExternalLink, Loader2, Sparkles } from 'lucide-react';
 
+import { BoughtButton } from '@/components/purchases/bought-button';
 import { Button } from '@/components/ui/button';
 import { useSessionToken } from '@/lib/api/account';
 import { useBluePicks } from '@/lib/api/assistant';
@@ -10,6 +11,7 @@ import { formatBlue } from '@/lib/format/blue';
 import { formatFloat } from '@/lib/format/float';
 import { formatSignedUsd, formatUsd } from '@/lib/format/money';
 import { plural } from '@/lib/format/time';
+import { useBoughtLots } from '@/lib/purchases/bought-lots';
 import { cn } from '@/lib/utils/cn';
 
 const clock = new Intl.DateTimeFormat('ru-RU', { hour: '2-digit', minute: '2-digit' });
@@ -23,6 +25,7 @@ export const BluePicks = ({
 }) => {
   const signedIn = useSessionToken() !== null;
   const picks = useBluePicks();
+  const bought = useBoughtLots();
 
   if (!signedIn || !weapon) return null;
 
@@ -73,41 +76,54 @@ export const BluePicks = ({
 
       {data && data.picks.length > 0 ? (
         <ol className="space-y-2">
-          {data.picks.map((pick) => (
-            <li key={pick.id} className="bg-surface-muted/60 rounded-2xl px-3 py-2.5">
-              <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-                <p className="min-w-0 flex-1 truncate text-[0.8125rem] font-semibold">
-                  {pick.name}
+          {data.picks
+            .filter((pick) => !bought.has(pick.url))
+            .map((pick) => (
+              <li key={pick.id} className="bg-surface-muted/60 rounded-2xl px-3 py-2.5">
+                <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                  <p className="min-w-0 flex-1 truncate text-[0.8125rem] font-semibold">
+                    {pick.name}
+                  </p>
+                  <span
+                    className={cn(
+                      'numeric rounded-full px-2 py-0.5 text-xs font-semibold',
+                      pick.margin > 0 ? 'bg-gain-soft text-gain' : 'bg-loss-soft text-loss',
+                    )}
+                  >
+                    {formatSignedUsd(pick.margin)} к оценке
+                  </span>
+                  <a
+                    href={pick.url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-foreground-muted hover:text-foreground flex items-center gap-1 text-xs"
+                  >
+                    {pick.market}
+                    <ExternalLink className="size-3" aria-hidden />
+                  </a>
+                  <BoughtButton
+                    compact
+                    lot={{
+                      name: pick.name,
+                      market: pick.market,
+                      price: pick.price,
+                      float: pick.float,
+                      paintSeed: pick.paintSeed,
+                      url: pick.url,
+                    }}
+                  />
+                </div>
+                <p className="text-foreground-muted numeric mt-1 text-xs">
+                  #{pick.paintSeed} · {formatBlue(pick.name, pick.blue, pick.source)}
+                  {pick.source === 'csfloat' ? ' (CSFloat)' : ''}
+                  {pick.float !== null ? ` · флоат ${formatFloat(pick.float, 4)}` : ''} · цена{' '}
+                  <span className="text-foreground font-medium">{formatUsd(pick.price)}</span>,
+                  похожие уходили около {formatUsd(pick.estimate)} · {pick.comparableCount}{' '}
+                  {plural(pick.comparableCount, ['продажа', 'продажи', 'продаж'])}
                 </p>
-                <span
-                  className={cn(
-                    'numeric rounded-full px-2 py-0.5 text-xs font-semibold',
-                    pick.margin > 0 ? 'bg-gain-soft text-gain' : 'bg-loss-soft text-loss',
-                  )}
-                >
-                  {formatSignedUsd(pick.margin)} к оценке
-                </span>
-                <a
-                  href={pick.url}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="text-foreground-muted hover:text-foreground flex items-center gap-1 text-xs"
-                >
-                  {pick.market}
-                  <ExternalLink className="size-3" aria-hidden />
-                </a>
-              </div>
-              <p className="text-foreground-muted numeric mt-1 text-xs">
-                #{pick.paintSeed} · {formatBlue(pick.name, pick.blue, pick.source)}
-                {pick.source === 'csfloat' ? ' (CSFloat)' : ''}
-                {pick.float !== null ? ` · флоат ${formatFloat(pick.float, 4)}` : ''} · цена{' '}
-                <span className="text-foreground font-medium">{formatUsd(pick.price)}</span>,
-                похожие уходили около {formatUsd(pick.estimate)} · {pick.comparableCount}{' '}
-                {plural(pick.comparableCount, ['продажа', 'продажи', 'продаж'])}
-              </p>
-              {pick.reason ? <p className="mt-1 text-[0.8125rem]">{pick.reason}</p> : null}
-            </li>
-          ))}
+                {pick.reason ? <p className="mt-1 text-[0.8125rem]">{pick.reason}</p> : null}
+              </li>
+            ))}
         </ol>
       ) : null}
 

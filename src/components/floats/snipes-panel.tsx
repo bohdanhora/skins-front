@@ -11,9 +11,12 @@ import { Segmented } from '@/components/ui/segmented';
 import { Select } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useDebouncedValue } from '@/hooks/use-debounced-value';
+import { useLiveCheck } from '@/hooks/use-live-check';
+import { useVisibleNames } from '@/hooks/use-visible-names';
 import { useSnipes } from '@/lib/api/queries';
 import type { MarketPhase, Snipe, SnipeSort, SnipesQuery } from '@/lib/api/types';
 import { parseFloatInput } from '@/lib/format/float';
+import { useBoughtLots } from '@/lib/purchases/bought-lots';
 import { plural } from '@/lib/format/time';
 import { PHASE_FILTERS } from '@/lib/markets';
 
@@ -32,6 +35,8 @@ const SOURCES: { value: NonNullable<SnipesQuery['source']>; label: string }[] = 
   { value: 'whiteMarket', label: 'Лот на White' },
   { value: 'csfloat', label: 'Лот на CSFloat' },
 ];
+
+const CHECK_EVERY_MS = 45_000;
 
 const GRID = 'grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3';
 
@@ -67,9 +72,16 @@ export const SnipesPanel = ({ onCheck }: { onCheck: (snipe: Snipe) => void }) =>
     sort,
   });
 
+  const bought = useBoughtLots();
+  const { observe, visible } = useVisibleNames();
+
+  useLiveCheck('/snipes/check', visible, 'snipes', CHECK_EVERY_MS);
+
   const first = snipes.data?.pages[0];
   const scanning = !!first && first.checked < first.candidates;
-  const items = snipes.data?.pages.flatMap((page) => page.items) ?? [];
+  const loaded = snipes.data?.pages.flatMap((page) => page.items) ?? [];
+  const items = loaded.filter((snipe) => !bought.has(snipe.listingUrl));
+  const total = Math.max(0, (first?.total ?? 0) - (loaded.length - items.length));
 
   return (
     <div className="space-y-6">
@@ -196,14 +208,14 @@ export const SnipesPanel = ({ onCheck }: { onCheck: (snipe: Snipe) => void }) =>
       ) : (
         <div className="space-y-4">
           <p className="text-foreground-muted text-sm">
-            Нашлось{' '}
-            <span className="text-foreground numeric font-semibold">{first?.total ?? 0}</span>{' '}
-            {plural(first?.total ?? 0, ['находка', 'находки', 'находок'])}
+            Нашлось <span className="text-foreground numeric font-semibold">{total}</span>{' '}
+            {plural(total, ['находка', 'находки', 'находок'])}
           </p>
           <div className={GRID}>
             {items.map((snipe, index) => (
               <SnipeCard
                 key={`${snipe.name}-${snipe.source}-${snipe.float}-${snipe.listingPrice}-${index}`}
+                ref={observe(snipe.name, snipe.listingUrl)}
                 snipe={snipe}
                 onCheck={onCheck}
               />

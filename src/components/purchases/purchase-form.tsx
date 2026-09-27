@@ -43,7 +43,7 @@ import { PURCHASE_MARKET_OPTIONS } from './purchase-shared';
 export type PurchasePrefill = Partial<PurchaseInput>;
 
 interface PurchaseFormApi {
-  add: (prefill?: PurchasePrefill) => void;
+  add: (prefill?: PurchasePrefill, options?: { onSaved?: () => void }) => void;
   edit: (purchase: Purchase) => void;
   sell: (purchase: Purchase, suggestion?: { market: PurchaseMarket; received: number }) => void;
 }
@@ -57,7 +57,7 @@ const PurchaseFormContext = createContext<PurchaseFormApi>({
 export const usePurchaseForm = () => useContext(PurchaseFormContext);
 
 type FormState =
-  | { mode: 'edit'; purchase: Purchase | null; prefill: PurchasePrefill }
+  | { mode: 'edit'; purchase: Purchase | null; prefill: PurchasePrefill; onSaved?: () => void }
   | { mode: 'sell'; purchase: Purchase; suggestion?: { market: PurchaseMarket; received: number } };
 
 const LOCK_OPTIONS = Array.from({ length: TRADE_LOCK_DAYS + 1 }, (_, days) => ({
@@ -88,9 +88,10 @@ interface EditFormProps {
   purchase: Purchase | null;
   prefill: PurchasePrefill;
   onDone: () => void;
+  onSaved?: () => void;
 }
 
-const EditForm = ({ purchase, prefill, onDone }: EditFormProps) => {
+const EditForm = ({ purchase, prefill, onDone, onSaved }: EditFormProps) => {
   const base = purchase ? toInput(purchase) : prefill;
   const [item, setItem] = useState(
     base.name
@@ -171,7 +172,13 @@ const EditForm = ({ purchase, prefill, onDone }: EditFormProps) => {
           sale: purchase?.sale ?? null,
         },
       },
-      { onSuccess: onDone, onError: (failure) => setError(failure.message) },
+      {
+        onSuccess: () => {
+          onSaved?.();
+          onDone();
+        },
+        onError: (failure) => setError(failure.message),
+      },
     );
   };
 
@@ -417,7 +424,8 @@ export const PurchaseFormProvider = ({ children }: { children: ReactNode }) => {
 
   const api = useMemo<PurchaseFormApi>(
     () => ({
-      add: (prefill = {}) => show({ mode: 'edit', purchase: null, prefill }),
+      add: (prefill = {}, options = {}) =>
+        show({ mode: 'edit', purchase: null, prefill, onSaved: options.onSaved }),
       edit: (purchase) => show({ mode: 'edit', purchase, prefill: {} }),
       sell: (purchase, suggestion) => show({ mode: 'sell', purchase, suggestion }),
     }),
@@ -452,6 +460,7 @@ export const PurchaseFormProvider = ({ children }: { children: ReactNode }) => {
             key={state.purchase?.id ?? JSON.stringify(state.prefill)}
             purchase={state.purchase}
             prefill={state.prefill}
+            onSaved={state.onSaved}
             onDone={close}
           />
         ) : null}

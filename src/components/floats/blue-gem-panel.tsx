@@ -8,6 +8,7 @@ import { useRememberedState } from '@/hooks/use-remembered-state';
 import { FilterBar } from '@/components/items/filters';
 import { GenerateButton } from '@/components/items/generate-button';
 import { PatternPreview } from '@/components/items/pattern-preview';
+import { BoughtButton } from '@/components/purchases/bought-button';
 import { EmptyState } from '@/components/states/empty-state';
 import { Button } from '@/components/ui/button';
 import { Chip } from '@/components/ui/chip';
@@ -24,6 +25,7 @@ import { formatFloat } from '@/lib/format/float';
 import { parseItemName } from '@/lib/format/item-name';
 import { formatPercent, formatUsd } from '@/lib/format/money';
 import { MARKETS } from '@/lib/markets';
+import { useBoughtLots } from '@/lib/purchases/bought-lots';
 import { cn } from '@/lib/utils/cn';
 
 import { FloatBar } from './float-bar';
@@ -77,6 +79,7 @@ export const BlueGemPanel = () => {
   const [shown, setShown] = useRememberedState('blueGem.shown', PAGE);
   const previewRef = useRef<HTMLDivElement>(null);
   const search = useBlueGems(weapon, wear);
+  const bought = useBoughtLots();
 
   const list = weapons.data?.weapons ?? [];
   const guns = list.filter((name) => GUNS.has(name));
@@ -91,6 +94,7 @@ export const BlueGemPanel = () => {
 
       return (
         (source === 'all' || listing.market === source) &&
+        !bought.has(listing.url) &&
         (blueFloor === undefined || measuredBlue(listing).playside >= blueFloor) &&
         (priceCap === undefined ||
           (listing.price !== null && listing.price <= Math.round(priceCap * 100))) &&
@@ -111,7 +115,7 @@ export const BlueGemPanel = () => {
     }
 
     return rows;
-  }, [search.data, source, minBlue, maxPrice, maxOverpay, order]);
+  }, [search.data, source, bought, minBlue, maxPrice, maxOverpay, order]);
 
   const preview = (seed: number) => {
     setPreviewSeed(String(seed));
@@ -403,6 +407,19 @@ const BlueGemRow = ({
           ) : null}
         </div>
         <GenerateButton name={listing.name} float={listing.float} seed={listing.paintSeed} />
+        {listing.price !== null ? (
+          <BoughtButton
+            compact
+            lot={{
+              name: listing.name,
+              market: listing.market,
+              price: listing.price,
+              float: listing.float,
+              paintSeed: listing.paintSeed,
+              url: listing.url,
+            }}
+          />
+        ) : null}
         <div className="w-44 shrink-0 text-right whitespace-nowrap">
           <p className="numeric text-[0.9375rem] font-semibold">
             {listing.price !== null ? formatUsd(listing.price) : listing.priceLabel}

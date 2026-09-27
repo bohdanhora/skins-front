@@ -1,6 +1,7 @@
 'use client';
 
 import { Clock, TrendingDown, TriangleAlert } from 'lucide-react';
+import type { Ref } from 'react';
 
 import type { DealMode, Item } from '@/lib/api/types';
 import { dealWarning } from '@/lib/deal-warning';
@@ -20,17 +21,21 @@ interface ItemCardProps {
   item: Item;
   mode: DealMode;
   onOpen: (name: string) => void;
+  ref?: Ref<HTMLElement>;
 }
 
 const FRESH_MS = 30 * 60_000;
 
-export const ItemCard = ({ item, mode, onOpen }: ItemCardProps) => {
+export const ItemCard = ({ item, mode, onOpen, ref }: ItemCardProps) => {
   const warning = dealWarning(item, mode);
   const changedAt = item.priceChangedAt ? Date.parse(item.priceChangedAt) : null;
   const fresh = changedAt !== null && Date.now() - changedAt < FRESH_MS;
 
   return (
-    <article className="group bg-surface relative flex flex-col rounded-3xl p-3 shadow-[var(--shadow-card)] transition-shadow duration-200 hover:shadow-[0_2px_4px_rgb(0_0_0/0.04),0_12px_28px_-12px_rgb(0_0_0/0.25)]">
+    <article
+      ref={ref}
+      className="group bg-surface relative flex flex-col rounded-3xl p-3 shadow-[var(--shadow-card)] transition-shadow duration-200 hover:shadow-[0_2px_4px_rgb(0_0_0/0.04),0_12px_28px_-12px_rgb(0_0_0/0.25)]"
+    >
       <button
         type="button"
         onClick={() => onOpen(item.name)}
