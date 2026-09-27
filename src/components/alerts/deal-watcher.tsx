@@ -7,19 +7,27 @@ import { useOpenItem } from '@/components/items/item-dialog-provider';
 import { ItemImage } from '@/components/items/item-image';
 import { apiGet } from '@/lib/api/client';
 import type { Item, ItemsPage } from '@/lib/api/types';
-import { alertFor, pruneSeen, stillWorth, type DealAlert } from '@/lib/alerts/deal-alerts';
+import {
+  ALERT_RULES,
+  alertFor,
+  pruneSeen,
+  stillWorth,
+  type DealAlert,
+} from '@/lib/alerts/deal-alerts';
 import { formatUsd } from '@/lib/format/money';
 import { readLocal, useLocalStore, writeLocal } from '@/lib/storage/local-store';
 import { useFavorites, useFees, type Fees } from '@/lib/storage/settings';
 
 export const DEAL_ALERTS_KEY = 'skins.dealAlerts';
+export const DEAL_ALERTS_MIN_PRICE_KEY = 'skins.dealAlertsMinPrice';
 
 const SEEN_KEY = 'skins.dealAlertsSeen';
 const CHECK_EVERY_MS = 3 * 60_000;
 const FIRST_CHECK_MS = 20_000;
 const TOP_LIMIT = 40;
 const VERIFY_PER_ROUND = 3;
-const SHOWN = 3;
+const SHOWN = 2;
+const HIDE_AFTER_MS = 10 * 60_000;
 
 const feeQuery = (fees: Fees) => ({
   feeWhiteMarket: fees.whiteMarket,
@@ -28,6 +36,11 @@ const feeQuery = (fees: Fees) => ({
 });
 
 export const useDealAlertsSetting = () => useLocalStore<boolean>(DEAL_ALERTS_KEY, true);
+
+export const useDealAlertsMinPrice = () =>
+  useLocalStore<number>(DEAL_ALERTS_MIN_PRICE_KEY, ALERT_RULES.defaultMinPrice);
+
+type ShownAlert = DealAlert & { shownAt: number };
 
 const notifySystem = (alert: DealAlert) => {
   if (
@@ -47,13 +60,14 @@ const notifySystem = (alert: DealAlert) => {
 
 export const DealWatcher = () => {
   const [enabled] = useDealAlertsSetting();
+  const [minPrice] = useDealAlertsMinPrice();
   const { favorites } = useFavorites();
   const fees = useFees();
   const openItem = useOpenItem();
-  const [alerts, setAlerts] = useState<DealAlert[]>([]);
-  const state = useRef({ favorites, fees });
+  const [alerts, setAlerts] = useState<ShownAlert[]>([]);
+  const state = useRef({ favorites, fees, minPrice });
 
-  state.current = { favorites, fees };
+  state.current = { favorites, fees, minPrice };
 
   const check = useCallback(async () => {
     if (
@@ -64,12 +78,14 @@ export const DealWatcher = () => {
       return;
     }
 
-    const { favorites: names, fees: current } = state.current;
+    const { favorites: names, fees: current, minPrice: floor } = state.current;
     const [top, followed] = await Promise.all([
       apiGet<ItemsPage>('/items', {
         mode: 'top',
         sort: 'score',
         limit: TOP_LIMIT,
+        minPrice: floor / 100,
+        minEightWeekSales: ALERT_RULES.minEightWeekSales,
         ...feeQuery(current),
       }),
       names.length > 0
@@ -79,8 +95,8 @@ export const DealWatcher = () => {
     const favoriteSet = new Set(names);
     const seen = pruneSeen(readLocal<Record<string, number>>(SEEN_KEY) ?? {}, Date.now());
     const candidates = [
-      ...followed.items.map((item) => alertFor(item, true)),
-      ...top.items.map((item) => alertFor(item, favoriteSet.has(item.name))),
+      ...followed.items.map((item) => alertFor(item, true, floor)),
+      ...top.items.map((item) => alertFor(item, favoriteSet.has(item.name), floor)),
     ].filter((alert): alert is DealAlert => alert !== null && !(alert.key in seen));
     const unique = [...new Map(candidates.map((alert) => [alert.name, alert])).values()];
 
@@ -91,19 +107,33 @@ export const DealWatcher = () => {
         name: candidate.name,
         ...feeQuery(current),
       }).catch(() => null);
-      const confirmed = fresh ? stillWorth(candidate, fresh) : null;
+      const confirmed = fresh ? stillWorth(candidate, fresh, floor) : null;
 
       if (confirmed) {
         seen[confirmed.key] = Date.now();
         setAlerts((list) =>
-          [confirmed, ...list.filter((entry) => entry.name !== confirmed.name)].slice(0, SHOWN),
+          [
+            { ...confirmed, shownAt: Date.now() },
+            ...list.filter((entry) => entry.name !== confirmed.name),
+          ].slice(0, SHOWN),
         );
         notifySystem(confirmed);
+        break;
       }
     }
 
     writeLocal(SEEN_KEY, seen);
   }, []);
+
+  useEffect(() => {
+    if (alerts.length === 0) return;
+
+    const timer = window.setInterval(() => {
+      setAlerts((list) => list.filter((entry) => Date.now() - entry.shownAt < HIDE_AFTER_MS));
+    }, 30_000);
+
+    return () => window.clearInterval(timer);
+  }, [alerts.length]);
 
   useEffect(() => {
     if (!enabled) return;
