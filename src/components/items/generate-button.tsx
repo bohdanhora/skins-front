@@ -1,10 +1,17 @@
 'use client';
 
 import * as Popover from '@radix-ui/react-popover';
+import { useQueryClient } from '@tanstack/react-query';
 import { Check, Copy, Loader2, Wand2 } from 'lucide-react';
 import { useDeferredValue, useState, type MouseEvent } from 'react';
 
-import { useFloatSearch, useInspectGen } from '@/lib/api/queries';
+import {
+  fetchInspectGen,
+  inspectGenQuery,
+  useFloatSearch,
+  useInspectGen,
+  type InspectGenParams,
+} from '@/lib/api/queries';
 import type { FloatListing, ItemCategory } from '@/lib/api/types';
 import { formatFloat } from '@/lib/format/float';
 import { formatUsd } from '@/lib/format/money';
@@ -16,9 +23,18 @@ interface GenerateButtonProps {
   float?: number | null;
   seed?: number | null;
   stickers?: string[];
+  layout?: StickerLayout[];
   suggest?: boolean;
   compact?: boolean;
   className?: string;
+}
+
+export interface StickerLayout {
+  slot: number | null;
+  wear: number | null;
+  offsetX: number | null;
+  offsetY: number | null;
+  rotation: number | null;
 }
 
 type Lot = FloatListing & { float: number };
@@ -35,6 +51,43 @@ const SKIN_CATEGORIES = new Set<ItemCategory>([
 
 export const canGenerate = (category: ItemCategory): boolean => SKIN_CATEGORIES.has(category);
 
+const genParams = (
+  name: string,
+  floatText: string,
+  seedText: string,
+  stickers?: string[],
+  layout?: StickerLayout[],
+): { params: InspectGenParams; valid: boolean } => {
+  const float = floatText.trim() ? Number(floatText.replace(',', '.')) : undefined;
+  const seed = seedText.trim() ? Number(seedText) : undefined;
+
+  return {
+    params: {
+      name,
+      float,
+      seed,
+      stickers,
+      layout: layout?.length ? JSON.stringify(layout) : undefined,
+    },
+    valid:
+      (float === undefined || Number.isFinite(float)) &&
+      (seed === undefined || Number.isInteger(seed)),
+  };
+};
+
+const numberText = (value: number | null | undefined): string =>
+  value !== null && value !== undefined ? String(value) : '';
+
+const copyText = (text: Promise<string>): Promise<void> => {
+  if (typeof ClipboardItem !== 'undefined' && navigator.clipboard.write) {
+    const blob = text.then((value) => new Blob([value], { type: 'text/plain' }));
+
+    return navigator.clipboard.write([new ClipboardItem({ 'text/plain': blob })]);
+  }
+
+  return text.then((value) => navigator.clipboard.writeText(value));
+};
+
 const keepInside = (event: MouseEvent) => {
   event.preventDefault();
   event.stopPropagation();
@@ -45,11 +98,37 @@ export const GenerateButton = ({
   float,
   seed,
   stickers,
+  layout,
   suggest = false,
   compact = false,
   className,
 }: GenerateButtonProps) => {
   const [open, setOpen] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const queryClient = useQueryClient();
+
+  const copyGen = () => {
+    const { params, valid } = genParams(
+      name,
+      numberText(float),
+      numberText(seed),
+      stickers,
+      layout,
+    );
+
+    if (suggest || !valid) return;
+
+    copyText(
+      queryClient
+        .fetchQuery({ ...inspectGenQuery(params), queryFn: () => fetchInspectGen(params) })
+        .then((gen) => gen.gen),
+    )
+      .then(() => {
+        setCopied(true);
+        setTimeout(() => setCopied(false), 1500);
+      })
+      .catch(() => undefined);
+  };
 
   return (
     <span onClick={keepInside} className={cn('inline-flex', className)}>
@@ -59,6 +138,7 @@ export const GenerateButton = ({
             type="button"
             aria-label="Сгенерировать"
             title="Сгенерировать"
+            onClick={copyGen}
             className={cn(
               'press text-foreground-subtle hover:text-foreground flex items-center justify-center',
               compact
@@ -66,7 +146,14 @@ export const GenerateButton = ({
                 : 'bg-surface/80 size-9 rounded-full backdrop-blur',
             )}
           >
-            <Wand2 className={compact ? 'size-3.5' : 'size-[1.125rem]'} aria-hidden />
+            {copied ? (
+              <Check
+                className={cn('text-gain', compact ? 'size-3.5' : 'size-[1.125rem]')}
+                aria-hidden
+              />
+            ) : (
+              <Wand2 className={compact ? 'size-3.5' : 'size-[1.125rem]'} aria-hidden />
+            )}
           </button>
         </Popover.Trigger>
         <Popover.Portal>
@@ -79,7 +166,13 @@ export const GenerateButton = ({
           >
             {open && suggest ? <SuggestedPanel name={name} /> : null}
             {open && !suggest ? (
-              <GeneratePanel name={name} float={float} seed={seed} stickers={stickers} />
+              <GeneratePanel
+                name={name}
+                float={float}
+                seed={seed}
+                stickers={stickers}
+                layout={layout}
+              />
             ) : null}
           </Popover.Content>
         </Popover.Portal>
@@ -162,11 +255,15 @@ const SuggestedPanel = ({ name }: { name: string }) => {
   );
 };
 
-const GeneratePanel = ({ name, float, seed, stickers }: Omit<GenerateButtonProps, 'className'>) => {
-  const [floatText, setFloatText] = useState(
-    float !== null && float !== undefined ? String(float) : '',
-  );
-  const [seedText, setSeedText] = useState(seed !== null && seed !== undefined ? String(seed) : '');
+const GeneratePanel = ({
+  name,
+  float,
+  seed,
+  stickers,
+  layout,
+}: Omit<GenerateButtonProps, 'className'>) => {
+  const [floatText, setFloatText] = useState(numberText(float));
+  const [seedText, setSeedText] = useState(numberText(seed));
 
   return (
     <>
@@ -178,6 +275,7 @@ const GeneratePanel = ({ name, float, seed, stickers }: Omit<GenerateButtonProps
         onFloat={setFloatText}
         onSeed={setSeedText}
         stickers={stickers}
+        layout={layout}
       />
     </>
   );
@@ -190,6 +288,7 @@ const GenerateOutput = ({
   onFloat,
   onSeed,
   stickers,
+  layout,
 }: {
   name: string;
   floatText: string;
@@ -197,14 +296,11 @@ const GenerateOutput = ({
   onFloat: (value: string) => void;
   onSeed: (value: string) => void;
   stickers?: string[];
+  layout?: StickerLayout[];
 }) => {
-  const floatValue = floatText.trim() ? Number(floatText.replace(',', '.')) : undefined;
-  const seedValue = seedText.trim() ? Number(seedText) : undefined;
-  const valid =
-    (floatValue === undefined || Number.isFinite(floatValue)) &&
-    (seedValue === undefined || Number.isInteger(seedValue));
-  const params = useDeferredValue({ name, float: floatValue, seed: seedValue, stickers });
-  const gen = useInspectGen(params, valid);
+  const current = genParams(name, floatText, seedText, stickers, layout);
+  const params = useDeferredValue(current.params);
+  const gen = useInspectGen(params, current.valid);
 
   return (
     <>
@@ -213,7 +309,16 @@ const GenerateOutput = ({
         <Field label="Паттерн" value={seedText} onChange={onSeed} placeholder="1" />
       </div>
       {stickers && stickers.length > 0 ? (
-        <p className="text-foreground-muted text-xs">Наклейки: {stickers.join(', ')}</p>
+        <p className="text-foreground-muted text-xs">
+          Наклейки:{' '}
+          {stickers
+            .map((sticker, index) => {
+              const wear = layout?.[index]?.wear;
+
+              return wear ? `${sticker} (потёрта на ${Math.round(wear * 100)}%)` : sticker;
+            })
+            .join(', ')}
+        </p>
       ) : null}
       {gen.isFetching && !gen.data ? (
         <Loader2 className="text-foreground-subtle size-4 animate-spin" aria-hidden />

@@ -2,7 +2,7 @@
 
 import { ExternalLink, KeyRound, TriangleAlert } from 'lucide-react';
 
-import type { Listing, Listings, MarketId } from '@/lib/api/types';
+import type { Listing, ListingSticker, Listings, MarketId } from '@/lib/api/types';
 import { formatPercent, formatUsd } from '@/lib/format/money';
 import { MARKETS, SELL_MARKET_ORDER } from '@/lib/markets';
 import { cn } from '@/lib/utils/cn';
@@ -102,19 +102,17 @@ const ListingRow = ({
         </div>
         {listing.stickers.length > 0 ? (
           <div className="flex items-center gap-1.5">
-            {listing.stickers.map((sticker, index) => (
-              <span
-                key={`${sticker.name}-${index}`}
-                title={`${sticker.name}${sticker.price ? `: ${formatUsd(sticker.price)}` : ''}`}
-                className="bg-surface-muted flex size-8 items-center justify-center rounded-lg"
-              >
-                {sticker.image ? (
-                  <img src={sticker.image} alt={sticker.name} className="size-7 object-contain" />
-                ) : (
-                  <span className="text-[0.625rem]">?</span>
-                )}
-              </span>
-            ))}
+            {stickerSlots(listing.stickers).map((sticker, index) =>
+              sticker ? (
+                <StickerIcon key={`${sticker.name}-${index}`} sticker={sticker} />
+              ) : (
+                <span
+                  key={`empty-${index}`}
+                  className="border-border size-8 rounded-lg border border-dashed"
+                  aria-hidden
+                />
+              ),
+            )}
             {listing.stickersValue > 0 ? (
               <span className="text-foreground-muted numeric ml-1 text-xs">
                 наклейки ≈ {formatUsd(listing.stickersValue)}
@@ -137,6 +135,13 @@ const ListingRow = ({
             name={listing.name}
             float={listing.float ? Number(listing.float) : null}
             stickers={listing.stickers.map((sticker) => sticker.name)}
+            layout={listing.stickers.map(({ slot, wear, offsetX, offsetY, rotation }) => ({
+              slot,
+              wear,
+              offsetX,
+              offsetY,
+              rotation,
+            }))}
           />
           <span className="numeric text-[0.9375rem] font-semibold">{formatUsd(listing.price)}</span>
           <ExternalLink className="text-foreground-subtle size-3.5" aria-hidden />
@@ -166,6 +171,47 @@ const DealBadge = ({ listing }: { listing: Listing }) => {
       )}
     >
       {free ? 'наклейки бесплатно' : `за ${formatPercent(listing.overpayShare * 100)} их цены`}
+    </span>
+  );
+};
+
+const stickerSlots = (stickers: ListingSticker[]): (ListingSticker | null)[] => {
+  if (stickers.some((sticker) => sticker.slot === null)) return stickers;
+
+  const last = Math.max(...stickers.map((sticker) => sticker.slot ?? 0));
+
+  return Array.from(
+    { length: last + 1 },
+    (_, slot) => stickers.find((sticker) => sticker.slot === slot) ?? null,
+  );
+};
+
+const StickerIcon = ({ sticker }: { sticker: ListingSticker }) => {
+  const scraped = sticker.wear !== null;
+  const details = [
+    sticker.price ? formatUsd(sticker.price) : null,
+    scraped ? `потёрта на ${Math.round(sticker.wear! * 100)}%, в цену не входит` : null,
+  ].filter(Boolean);
+
+  return (
+    <span
+      title={details.length ? `${sticker.name}: ${details.join(', ')}` : sticker.name}
+      className="bg-surface-muted relative flex size-8 items-center justify-center rounded-lg"
+    >
+      {sticker.image ? (
+        <img
+          src={sticker.image}
+          alt={sticker.name}
+          className={cn('size-7 object-contain', scraped && 'opacity-40 grayscale')}
+        />
+      ) : (
+        <span className="text-[0.625rem]">?</span>
+      )}
+      {scraped ? (
+        <span className="bg-surface text-warning numeric absolute -right-1 -bottom-1 rounded px-0.5 text-[0.5625rem] leading-tight font-semibold">
+          {Math.round(sticker.wear! * 100)}%
+        </span>
+      ) : null}
     </span>
   );
 };

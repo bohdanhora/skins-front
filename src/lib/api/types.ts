@@ -175,7 +175,13 @@ export interface SourceState {
 export interface ListingSticker {
   name: string;
   image: string | null;
+  slot: number | null;
+  wear: number | null;
+  offsetX: number | null;
+  offsetY: number | null;
+  rotation: number | null;
   price: number | null;
+  value: number;
 }
 
 export interface Listing {

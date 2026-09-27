@@ -224,17 +224,26 @@ export const useBlueValue = (name: string, paintSeed: number | null, enabled: bo
     retry: false,
   });
 
-export const useInspectGen = (
-  params: { name: string; float?: number; seed?: number; stickers?: string[] },
-  enabled: boolean,
-) =>
-  useQuery({
-    queryKey: ['inspect-gen', params],
-    queryFn: ({ signal }) => apiGet<InspectGen>('/items/gen', params, signal),
-    enabled,
-    staleTime: Infinity,
-    retry: false,
-  });
+export interface InspectGenParams {
+  name: string;
+  float?: number;
+  seed?: number;
+  stickers?: string[];
+  layout?: string;
+}
+
+export const fetchInspectGen = (params: InspectGenParams, signal?: AbortSignal) =>
+  apiGet<InspectGen>('/items/gen', { ...params }, signal);
+
+export const inspectGenQuery = (params: InspectGenParams) => ({
+  queryKey: ['inspect-gen', params],
+  queryFn: ({ signal }: { signal?: AbortSignal }) => fetchInspectGen(params, signal),
+  staleTime: Infinity,
+  retry: false,
+});
+
+export const useInspectGen = (params: InspectGenParams, enabled: boolean) =>
+  useQuery({ ...inspectGenQuery(params), enabled });
 
 export const usePatternImages = (name: string | null) =>
   useQuery({
