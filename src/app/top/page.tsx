@@ -88,7 +88,9 @@ const TopPage = () => {
     minBenefitPercent: Number(minBenefitPercent) || 0,
   });
 
-  const floors = status.data?.floors ? Object.values(status.data.floors) : [];
+  const floors = status.data?.floors
+    ? [status.data.floors.dmarket, status.data.floors.whiteMarket]
+    : [];
   const checked =
     (status.data?.salesChecked ?? 0) + floors.reduce((sum, market) => sum + market.checked, 0);
   const total =
