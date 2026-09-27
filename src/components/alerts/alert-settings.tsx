@@ -26,7 +26,7 @@ export const AlertSettings = () => {
       <Toggle checked={enabled} onChange={setEnabled} label="Сообщать о сильных сделках" />
       <p className="text-foreground-muted text-[0.8125rem]">
         Пока вкладка открыта, раз в 3 минуты смотрим топ и избранное. Сообщаем, когда сигнал от{' '}
-        {ALERT_RULES.score} или цена на {ALERT_RULES.percent}% ниже рынка и выгода от $
+        {ALERT_RULES.score} или цена на {ALERT_RULES.percent}% ниже обычного и выгода от $
         {ALERT_RULES.minDiscount / 100}, для избранного от {ALERT_RULES.favoriteScore} и{' '}
         {ALERT_RULES.favoritePercent}%. Предмет должен продаваться от{' '}
         {ALERT_RULES.minEightWeekSales} раз за 8 недель. Перед сообщением цена перепроверяется.

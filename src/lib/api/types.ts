@@ -70,6 +70,7 @@ export interface SalesStats {
 }
 
 export interface TopOffer {
+  market: MarketId;
   price: number;
   reference: number;
   discount: number;
@@ -224,6 +225,7 @@ export interface Status {
   catalogItems: number;
   salesChecked: number;
   salesTotal: number;
+  floors?: Record<'dmarket' | 'csfloat' | 'whiteMarket', { checked: number; total: number }>;
   csfloatQuota?: {
     limit: number | null;
     remaining: number | null;

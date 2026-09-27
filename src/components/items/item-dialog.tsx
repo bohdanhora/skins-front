@@ -118,10 +118,10 @@ const ItemDetails = ({ item, onNavigate }: { item: Item; onNavigate: () => void 
         {item.top ? (
           <div className="bg-gain-soft text-gain flex items-center gap-2 rounded-2xl px-4 py-3 text-sm font-medium">
             <TrendingDown className="size-4 shrink-0" aria-hidden />
-            Сейчас на {formatPercent(item.top.percent)} ниже рынка
+            На {MARKETS[item.top.market].name} на {formatPercent(item.top.percent)} ниже обычного
             {item.dmarket?.bid
-              ? item.dmarket.bid >= item.top.price
-                ? `, а скупают даже дороже: ${formatUsd(item.dmarket.bid)}`
+              ? (item.top.bidCover ?? 0) >= 100
+                ? `, а заявка DMarket даже после комиссии выше: ${formatUsd(item.dmarket.bid)}`
                 : `, скупают за ${formatUsd(item.dmarket.bid)}`
               : ''}
           </div>

@@ -60,7 +60,14 @@ describe('dealWarning', () => {
   it('warns about rarely sold items and suspicious discounts in top offers', () => {
     const base = item(quote(100), quote(120));
     const sales = { floor: 200, lastDay: '2026-09-25', lastAverage: 200, weekSales: 2 };
-    const top = { price: 100, reference: 200, discount: 100, percent: 50, bidCover: 90 };
+    const top = {
+      market: 'csfloat' as const,
+      price: 100,
+      reference: 200,
+      discount: 100,
+      percent: 50,
+      bidCover: 90,
+    };
 
     expect(dealWarning({ ...base, sales, top }, 'top')?.short).toBe('редко продаётся');
     expect(dealWarning({ ...base, sales: { ...sales, weekSales: 40 }, top }, 'top')?.short).toBe(

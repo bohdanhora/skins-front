@@ -58,7 +58,7 @@ export const alertFor = (item: Item, favorite: boolean, minPrice: number): DealA
   const parts = [
     favorite ? 'из избранного' : null,
     percent !== null && discount !== null
-      ? `на ${formatPercent(percent)} ниже рынка, ${formatUsd(discount)}`
+      ? `на ${formatPercent(percent)} ниже обычного, ${formatUsd(discount)}`
       : null,
     score !== null ? `сигнал ${score}` : null,
   ].filter(Boolean);

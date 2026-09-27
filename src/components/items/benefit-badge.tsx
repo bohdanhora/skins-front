@@ -22,7 +22,7 @@ export const BenefitBadge = ({ item, mode }: BenefitBadgeProps) => {
         <div className="flex flex-wrap gap-1.5">
           <Pill className="bg-gain-soft text-gain">
             <TrendingDown className="size-3.5" aria-hidden />
-            Ниже рынка на {formatPercent(top.percent)}
+            Ниже обычного на {formatPercent(top.percent)}
             <span className="opacity-70">· {formatUsd(top.discount)}</span>
           </Pill>
           {item.dealScore ? (
@@ -30,10 +30,23 @@ export const BenefitBadge = ({ item, mode }: BenefitBadgeProps) => {
           ) : null}
         </div>
         <p className="text-foreground-muted text-xs">
-          Обычно от {formatUsd(top.reference)}
+          <span className={MARKETS[top.market].text}>{MARKETS[top.market].short}</span>, обычно от{' '}
+          {formatUsd(top.reference)}
           {item.dmarket?.bid ? `, скупают за ${formatUsd(item.dmarket.bid)}` : ''}
           {item.sales?.eightWeekSales ? `, ${item.sales.eightWeekSales} продаж за 8 недель` : ''}
         </p>
+        {item.flip && item.flip.profit > 0 && item.flip.buyOn === top.market ? (
+          <p className="text-foreground-muted flex flex-wrap items-center gap-1 text-xs">
+            Перепродать на
+            <span className={MARKETS[item.flip.sellOn].text}>
+              {MARKETS[item.flip.sellOn].short}
+            </span>
+            за {formatUsd(item.flip.sellPrice)}:
+            <span className="text-gain font-semibold">
+              {formatSignedUsd(item.flip.profit)} после комиссии
+            </span>
+          </p>
+        ) : null}
       </div>
     );
   }

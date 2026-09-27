@@ -88,8 +88,11 @@ const TopPage = () => {
     minBenefitPercent: Number(minBenefitPercent) || 0,
   });
 
-  const checked = status.data?.salesChecked ?? 0;
-  const total = status.data?.salesTotal ?? 0;
+  const floors = status.data?.floors ? Object.values(status.data.floors) : [];
+  const checked =
+    (status.data?.salesChecked ?? 0) + floors.reduce((sum, market) => sum + market.checked, 0);
+  const total =
+    (status.data?.salesTotal ?? 0) + floors.reduce((sum, market) => sum + market.total, 0);
   const scanning = total > 0 && checked < total;
 
   return (
@@ -97,9 +100,8 @@ const TopPage = () => {
       <section className="space-y-2">
         <h1 className="page-title">Топ предложения</h1>
         <p className="text-foreground-muted max-w-2xl text-[0.9375rem] leading-relaxed">
-          Предметы, которые сейчас продают дешевле недавних продаж. Ликвидность считается за восемь
-          недель. Если рядом стоит автопокупка, риск почти нулевой: при желании можно сразу продать
-          обратно.
+          Предметы, которые сейчас продают дешевле, чем они обычно продаются на той же площадке.
+          Ликвидность считается за восемь недель.
         </p>
       </section>
 
@@ -185,7 +187,7 @@ const TopPage = () => {
             checked={closeBidOnly}
             onChange={setCloseBidOnly}
             label="Автопокупка рядом"
-            hint={`Заявка на покупку не ниже ${CLOSE_BID_COVER}% от цены`}
+            hint={`Заявка на DMarket после комиссии не ниже ${CLOSE_BID_COVER}% от цены`}
           />
         </div>
       </FilterBar>

@@ -34,6 +34,7 @@ const item = (extra: Partial<Item> = {}): Item => ({
 });
 
 const top = (percent: number, price = 1_950, discount = 200) => ({
+  market: 'csfloat' as const,
   price,
   reference: price + discount,
   discount,
@@ -48,7 +49,7 @@ describe('deal alerts', () => {
 
   it('fires on a deep discount worth real money', () => {
     expect(alertFor(item({ top: top(9) }), false, MIN_PRICE)?.reason).toBe(
-      'на 9% ниже рынка, $2.00',
+      'на 9% ниже обычного, $2.00',
     );
   });
 
@@ -73,7 +74,7 @@ describe('deal alerts', () => {
         false,
         MIN_PRICE,
       )?.reason,
-    ).toBe('на 4% ниже рынка, $2.00 · сигнал 72');
+    ).toBe('на 4% ниже обычного, $2.00 · сигнал 72');
   });
 
   it('ignores a signal built on little data', () => {
@@ -89,7 +90,7 @@ describe('deal alerts', () => {
   it('uses softer limits for favourites and no price floor', () => {
     expect(alertFor(item({ top: top(6.5) }), false, MIN_PRICE)).toBeNull();
     expect(alertFor(item({ top: top(6.5, 300, 120), sales: null }), true, MIN_PRICE)?.reason).toBe(
-      'из избранного · на 6,5% ниже рынка, $1.20',
+      'из избранного · на 6,5% ниже обычного, $1.20',
     );
   });
 
