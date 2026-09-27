@@ -134,13 +134,15 @@ const ListingRow = ({
           <GenerateButton
             name={listing.name}
             float={listing.float ? Number(listing.float) : null}
+            seed={listing.paintSeed}
             stickers={listing.stickers.map((sticker) => sticker.name)}
-            layout={listing.stickers.map(({ slot, wear, offsetX, offsetY, rotation }) => ({
+            layout={listing.stickers.map(({ slot, wear, offsetX, offsetY, rotation, scale }) => ({
               slot,
               wear,
               offsetX,
               offsetY,
               rotation,
+              scale,
             }))}
           />
           <span className="numeric text-[0.9375rem] font-semibold">{formatUsd(listing.price)}</span>
@@ -175,8 +177,12 @@ const DealBadge = ({ listing }: { listing: Listing }) => {
   );
 };
 
+const NORMAL_SLOTS = 5;
+
 const stickerSlots = (stickers: ListingSticker[]): (ListingSticker | null)[] => {
-  if (stickers.some((sticker) => sticker.slot === null)) return stickers;
+  if (stickers.some((sticker) => sticker.slot === null || sticker.slot >= NORMAL_SLOTS)) {
+    return stickers;
+  }
 
   const last = Math.max(...stickers.map((sticker) => sticker.slot ?? 0));
 

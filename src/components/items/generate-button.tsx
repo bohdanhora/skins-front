@@ -35,6 +35,7 @@ export interface StickerLayout {
   offsetX: number | null;
   offsetY: number | null;
   rotation: number | null;
+  scale: number | null;
 }
 
 type Lot = FloatListing & { float: number };
@@ -121,7 +122,7 @@ export const GenerateButton = ({
     copyText(
       queryClient
         .fetchQuery({ ...inspectGenQuery(params), queryFn: () => fetchInspectGen(params) })
-        .then((gen) => gen.gen),
+        .then((gen) => (gen.genExact ? gen.gen : gen.server)),
     )
       .then(() => {
         setCopied(true);
@@ -329,6 +330,12 @@ const GenerateOutput = ({
           <CopyRow label="Сервер cs2inspects" value={gen.data.server} />
           <CopyRow label="Консоль CS2" value={gen.data.console} />
           <CopyRow label="!gen" value={gen.data.gen} />
+          {!gen.data.genExact ? (
+            <p className="text-warning text-xs">
+              !gen ставит наклейки только в пять обычных слотов, точное расположение даёт команда
+              сервера
+            </p>
+          ) : null}
           {gen.data.missingStickers.length > 0 ? (
             <p className="text-warning text-xs">
               Нет в каталоге: {gen.data.missingStickers.join(', ')}

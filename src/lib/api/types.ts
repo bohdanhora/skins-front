@@ -180,6 +180,7 @@ export interface ListingSticker {
   offsetX: number | null;
   offsetY: number | null;
   rotation: number | null;
+  scale: number | null;
   price: number | null;
   value: number;
 }
@@ -191,6 +192,7 @@ export interface Listing {
   image: string | null;
   price: number;
   float: string | null;
+  paintSeed: number | null;
   stickers: ListingSticker[];
   stickersValue: number;
   basePrice: number | null;
@@ -687,5 +689,6 @@ export interface InspectGen {
   link: string;
   server: string;
   gen: string;
+  genExact: boolean;
   missingStickers: string[];
 }
