@@ -1,6 +1,7 @@
 import { Lock, Plus } from 'lucide-react';
 
 import { BlueShareTag } from '@/components/items/blue-share-tag';
+import { FadeTag } from '@/components/items/fade-tag';
 import { ItemImage } from '@/components/items/item-image';
 import { ItemTitle } from '@/components/items/item-title';
 import type { InventoryItem, MarketId, SaleOption } from '@/lib/api/types';
@@ -88,6 +89,7 @@ export const InventoryItemRow = ({ item, purchase, onOpen, onRecord }: Inventory
             {item.amount > 1 ? <span>× {item.amount}</span> : null}
             {item.float !== null ? <span>флоат {formatFloat(item.float, 6)}</span> : null}
             {item.paintSeed !== null ? <span>паттерн {item.paintSeed}</span> : null}
+            <FadeTag name={item.name} seed={item.paintSeed} />
             {item.blue ? <BlueShareTag blue={item.blue} name={item.name} /> : null}
             {item.sales?.eightWeekSales ? (
               <span>{item.sales.eightWeekSales} продаж за 8 нед.</span>

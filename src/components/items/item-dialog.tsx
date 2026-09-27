@@ -37,6 +37,7 @@ import { MARKETS, MARKET_ORDER } from '@/lib/markets';
 import { useFees } from '@/lib/storage/settings';
 import { cn } from '@/lib/utils/cn';
 
+import { ItemAnalysisPanel } from './item-analysis';
 import { ListingList } from './listing-list';
 import { PatternPreview } from './pattern-preview';
 import { FavoriteButton } from './favorite-button';
@@ -109,6 +110,8 @@ const ItemDetails = ({ item, onNavigate }: { item: Item; onNavigate: () => void 
       </div>
 
       <Verdict item={item} />
+
+      <ItemAnalysisPanel name={item.name} />
 
       <div className="grid gap-3 sm:grid-cols-2">
         {MARKET_ORDER.map((market) => (

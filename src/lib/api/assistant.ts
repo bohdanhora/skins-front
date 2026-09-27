@@ -9,6 +9,7 @@ import type {
   AssistantSettings,
   BluePicks,
   FloatPicks,
+  ItemAnalysis,
   MatchBrief,
   PurchaseDraft,
   SmartSearch,
@@ -104,6 +105,17 @@ export const useBluePicks = () =>
   useMutation({
     mutationFn: (input: { weapon: string; wear?: string }) =>
       apiSend<BluePicks>('POST', '/assistant/blue-picks', input),
+  });
+
+export const useItemAnalysis = () =>
+  useMutation({
+    mutationFn: (input: {
+      name: string;
+      feeWhiteMarket: number;
+      feeDmarket: number;
+      feeCsfloat: number;
+      refresh?: boolean;
+    }) => apiSend<ItemAnalysis>('POST', '/assistant/item-analysis', input),
   });
 
 export const useFloatPicks = () =>

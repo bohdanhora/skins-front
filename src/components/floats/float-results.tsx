@@ -6,6 +6,7 @@ import { useState } from 'react';
 import { useRememberedState } from '@/hooks/use-remembered-state';
 import { BlueShareTag } from '@/components/items/blue-share-tag';
 import { GenerateButton } from '@/components/items/generate-button';
+import { FadeTag } from '@/components/items/fade-tag';
 import { BoughtButton } from '@/components/purchases/bought-button';
 import { Segmented } from '@/components/ui/segmented';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -298,7 +299,8 @@ const SteamListingRow = ({
         <p className="mt-0.5">
           {[listing.paintSeed !== null ? `паттерн ${listing.paintSeed}` : null, listing.phase]
             .filter(Boolean)
-            .join(', ')}
+            .join(', ')}{' '}
+          <FadeTag name={name} seed={listing.paintSeed} />
         </p>
         {listing.blue ? <BlueShareTag blue={listing.blue} name={name} /> : null}
       </div>
@@ -405,7 +407,9 @@ const ListingRow = ({
             {MARKETS[listing.market].name}
           </p>
           {listing.paintSeed !== null ? (
-            <p className="mt-0.5">паттерн {listing.paintSeed}</p>
+            <p className="mt-0.5">
+              паттерн {listing.paintSeed} <FadeTag name={name} seed={listing.paintSeed} />
+            </p>
           ) : null}
           {listing.blue ? <BlueShareTag blue={listing.blue} name={name} /> : null}
         </div>

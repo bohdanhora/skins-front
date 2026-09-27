@@ -5,6 +5,7 @@ import { useState, type ReactNode } from 'react';
 
 import { FloatBar } from '@/components/floats/float-bar';
 import { canGenerate, GenerateButton } from '@/components/items/generate-button';
+import { FadeTag } from '@/components/items/fade-tag';
 import { ItemImage } from '@/components/items/item-image';
 import { ItemTitle } from '@/components/items/item-title';
 import { stickerLabel } from '@/components/stickers/sticker-picker';
@@ -100,7 +101,12 @@ const Traits = ({
           {purchase.float.toFixed(4)}
         </Chip>
       ) : null}
-      {wear && purchase.paintSeed !== null ? <Chip>#{purchase.paintSeed}</Chip> : null}
+      {wear && purchase.paintSeed !== null ? (
+        <Chip>
+          #{purchase.paintSeed}
+          <FadeTag name={purchase.name} seed={purchase.paintSeed} />
+        </Chip>
+      ) : null}
       {valuation.stickers.length > 0 ? (
         <Chip title={purchase.stickers.map(stickerLabel).join(', ')}>
           <span className="flex -space-x-1">

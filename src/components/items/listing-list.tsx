@@ -8,6 +8,7 @@ import { MARKETS, SELL_MARKET_ORDER } from '@/lib/markets';
 import { cn } from '@/lib/utils/cn';
 
 import { GenerateButton } from './generate-button';
+import { FadeTag } from './fade-tag';
 import { ItemImage } from './item-image';
 
 interface ListingListProps {
@@ -99,6 +100,10 @@ const ListingRow = ({
           {listing.float ? (
             <span className="numeric">флоат {Number(listing.float).toFixed(4)}</span>
           ) : null}
+          {listing.paintSeed !== null ? (
+            <span className="numeric">паттерн {listing.paintSeed}</span>
+          ) : null}
+          <FadeTag name={listing.name} seed={listing.paintSeed} />
         </div>
         {listing.stickers.length > 0 ? (
           <div className="flex items-center gap-1.5">

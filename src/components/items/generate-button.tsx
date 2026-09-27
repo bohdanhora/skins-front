@@ -18,6 +18,8 @@ import { formatUsd } from '@/lib/format/money';
 import { MARKETS } from '@/lib/markets';
 import { cn } from '@/lib/utils/cn';
 
+import { FadeTag } from './fade-tag';
+
 interface GenerateButtonProps {
   name: string;
   float?: number | null;
@@ -234,7 +236,8 @@ const SuggestedPanel = ({ name }: { name: string }) => {
                 <span className="w-16 shrink-0">{MARKETS[lot.market].short}</span>
                 <span className="min-w-0 flex-1 truncate">
                   {formatFloat(lot.float, 4)}
-                  {lot.paintSeed !== null ? ` · #${lot.paintSeed}` : ''}
+                  {lot.paintSeed !== null ? ` · #${lot.paintSeed}` : ''}{' '}
+                  <FadeTag name={name} seed={lot.paintSeed} />
                 </span>
                 <span className="font-semibold">{formatUsd(lot.price)}</span>
               </button>

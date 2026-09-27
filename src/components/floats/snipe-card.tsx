@@ -4,6 +4,7 @@ import { ArrowDown, ExternalLink, Search } from 'lucide-react';
 import type { Ref } from 'react';
 
 import { BlueShareTag } from '@/components/items/blue-share-tag';
+import { FadeTag } from '@/components/items/fade-tag';
 import { canGenerate, GenerateButton } from '@/components/items/generate-button';
 import { ItemImage } from '@/components/items/item-image';
 import { ItemTitle } from '@/components/items/item-title';
@@ -93,7 +94,8 @@ export const SnipeCard = ({ snipe, onCheck, ref }: SnipeCardProps) => {
               snipe.phase ? phaseLabel(snipe.phase) : null,
             ]
               .filter(Boolean)
-              .join(', ')}
+              .join(', ')}{' '}
+            <FadeTag name={snipe.name} seed={snipe.paintSeed} />
           </p>
           {snipe.blue ? (
             <BlueShareTag blue={snipe.blue} name={snipe.name} className="mt-0.5 block text-xs" />

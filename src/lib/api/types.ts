@@ -689,6 +689,33 @@ export interface FloatPicks {
   csfloatPausedUntil: string | null;
 }
 
+export interface AnalyzedLot {
+  market: string;
+  price: number;
+  float: number | null;
+  paintSeed: number | null;
+  fade: number | null;
+  blue: number | null;
+  url: string;
+}
+
+export interface ItemAnalysis {
+  score: number;
+  verdict: 'buy' | 'consider' | 'skip';
+  summary: string;
+  pros: string[];
+  cons: string[];
+  lot: AnalyzedLot | null;
+  similarSales: {
+    count: number;
+    median: number;
+    low: number;
+    high: number;
+    floatRange: [number, number];
+  } | null;
+  analyzedAt: string;
+}
+
 export interface FavoriteSet {
   id: string;
   name: string;

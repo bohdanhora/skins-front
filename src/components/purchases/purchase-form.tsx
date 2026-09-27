@@ -11,6 +11,7 @@ import {
   type ReactNode,
 } from 'react';
 
+import { FadeTag } from '@/components/items/fade-tag';
 import { ItemImage } from '@/components/items/item-image';
 import { ItemPicker } from '@/components/items/item-picker';
 import { ItemTitle } from '@/components/items/item-title';
@@ -248,6 +249,9 @@ const EditForm = ({ purchase, prefill, onDone, onSaved }: EditFormProps) => {
             placeholder="661"
             className="numeric"
           />
+          {item && paintSeed ? (
+            <FadeTag name={item.name} seed={Number(paintSeed)} className="block text-xs" />
+          ) : null}
         </Field>
         <Field label="Количество">
           <Input

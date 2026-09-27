@@ -3,6 +3,7 @@
 import { ExternalLink, Loader2, Sparkles } from 'lucide-react';
 
 import { GenerateButton } from '@/components/items/generate-button';
+import { FadeTag } from '@/components/items/fade-tag';
 import { BoughtButton } from '@/components/purchases/bought-button';
 import { Button } from '@/components/ui/button';
 import { useSessionToken } from '@/lib/api/account';
@@ -77,6 +78,7 @@ export const FloatPicks = ({ name, floatFrom, floatTo }: FloatPicksProps) => {
                   <p className="numeric min-w-0 flex-1 text-[0.8125rem] font-semibold">
                     {formatUsd(pick.price)} · флоат {formatFloat(pick.float, 5)}
                     {pick.paintSeed !== null ? ` · паттерн ${pick.paintSeed}` : ''}
+                    <FadeTag name={name} seed={pick.paintSeed} className="ml-1.5" />
                   </p>
                   {pick.saving > 0 ? (
                     <span className="bg-gain-soft text-gain numeric rounded-full px-2 py-0.5 text-xs font-semibold">
