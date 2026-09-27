@@ -4,6 +4,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ThemeProvider } from 'next-themes';
 import { useState, type ReactNode } from 'react';
 
+import { DealWatcher } from '@/components/alerts/deal-watcher';
 import { ItemDialogProvider } from '@/components/items/item-dialog-provider';
 import { AccountSync } from '@/components/layout/account-sync';
 import { PurchaseFormProvider } from '@/components/purchases/purchase-form';
@@ -40,7 +41,10 @@ export const Providers = ({ children }: { children: ReactNode }) => {
       <QueryClientProvider client={client}>
         <AccountSync />
         <PurchaseFormProvider>
-          <ItemDialogProvider>{children}</ItemDialogProvider>
+          <ItemDialogProvider>
+            {children}
+            <DealWatcher />
+          </ItemDialogProvider>
         </PurchaseFormProvider>
       </QueryClientProvider>
     </ThemeProvider>

@@ -7,6 +7,8 @@ import { apiGet, apiSend } from './client';
 import type {
   AssistantProvider,
   AssistantSettings,
+  BluePicks,
+  FloatPicks,
   MatchBrief,
   PurchaseDraft,
   SmartSearch,
@@ -96,4 +98,20 @@ export const usePurchaseDraft = () =>
 export const useSmartSearch = () =>
   useMutation({
     mutationFn: (query: string) => apiSend<SmartSearch>('POST', '/assistant/search', { query }),
+  });
+
+export const useBluePicks = () =>
+  useMutation({
+    mutationFn: (input: { weapon: string; wear?: string }) =>
+      apiSend<BluePicks>('POST', '/assistant/blue-picks', input),
+  });
+
+export const useFloatPicks = () =>
+  useMutation({
+    mutationFn: (input: {
+      name: string;
+      floatFrom?: number;
+      floatTo?: number;
+      feeDmarket?: number;
+    }) => apiSend<FloatPicks>('POST', '/assistant/float-picks', input),
   });

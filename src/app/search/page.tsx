@@ -3,7 +3,7 @@
 import { SearchX } from 'lucide-react';
 import type { Route } from 'next';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Suspense, useEffect } from 'react';
+import { Suspense, useEffect, useRef } from 'react';
 
 import {
   CategoryChips,
@@ -65,6 +65,39 @@ const SearchPage = () => {
     'all',
   );
   const [collection, setCollection] = useRememberedState('search.collection', '');
+
+  const linked = useRef(params.get('q'));
+
+  useEffect(() => {
+    const incoming = linked.current;
+
+    linked.current = null;
+
+    if (!incoming || incoming === q) return;
+
+    setQ(incoming);
+    setCategory(undefined);
+    setSubcategory(undefined);
+    setMinPrice('');
+    setMaxPrice('');
+    setWear('all');
+    setEdition('all');
+    setPhase('all');
+    setCheapestOn('all');
+    setCollection('');
+  }, [
+    q,
+    setQ,
+    setCategory,
+    setSubcategory,
+    setMinPrice,
+    setMaxPrice,
+    setWear,
+    setEdition,
+    setPhase,
+    setCheapestOn,
+    setCollection,
+  ]);
 
   const search = useDebouncedValue(q);
   const priceFrom = useDebouncedValue(minPrice);

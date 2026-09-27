@@ -4,46 +4,44 @@ import { Hourglass } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
 import { useStatus } from '@/lib/api/queries';
-import { formatLockLeft } from '@/lib/purchases/purchases';
-import { cn } from '@/lib/utils/cn';
-
-const TICK_MS = 15_000;
 
 const clock = new Intl.DateTimeFormat('ru-RU', { hour: '2-digit', minute: '2-digit' });
 
-export const useCsfloatPause = (): number | null => {
+const pad = (value: number): string => String(value).padStart(2, '0');
+
+export const countdown = (ms: number): string => {
+  const total = Math.max(0, Math.ceil(ms / 1000));
+  const hours = Math.floor(total / 3600);
+  const minutes = Math.floor((total % 3600) / 60);
+  const seconds = total % 60;
+
+  return hours > 0 ? `${hours}:${pad(minutes)}:${pad(seconds)}` : `${minutes}:${pad(seconds)}`;
+};
+
+export const CsfloatCountdown = () => {
   const status = useStatus();
-  const [now, setNow] = useState(() => Date.now());
   const until = status.data?.csfloatQuota?.pausedUntil;
   const time = until ? Date.parse(until) : null;
+  const [now, setNow] = useState(() => Date.now());
 
   useEffect(() => {
     if (time === null) return;
 
-    const timer = window.setInterval(() => setNow(Date.now()), TICK_MS);
+    const timer = window.setInterval(() => setNow(Date.now()), 1000);
 
     return () => window.clearInterval(timer);
   }, [time]);
 
-  return time !== null && time > now ? time : null;
-};
-
-export const CsfloatPause = ({ className }: { className?: string }) => {
-  const until = useCsfloatPause();
-
-  if (until === null) return null;
+  if (time === null || time <= now) return null;
 
   return (
     <span
-      className={cn(
-        'bg-warning-soft text-warning numeric inline-flex h-9 shrink-0 items-center gap-1.5 rounded-full px-3 text-[0.8125rem] font-medium whitespace-nowrap',
-        className,
-      )}
-      title={`CSFloat исчерпал лимит запросов, снова через ${formatLockLeft(until - Date.now())}. Цены, синий и лоты с CSFloat вернутся сами`}
+      className="border-border text-warning numeric flex items-center gap-1 border-l pl-2"
+      title={`CSFloat исчерпал лимит запросов и вернётся в ${clock.format(new Date(time))}. Цены, синий и лоты с CSFloat подтянутся сами`}
     >
       <Hourglass className="size-3.5" aria-hidden />
-      <span className="sr-only">CSFloat на паузе до</span>
-      {clock.format(new Date(until))}
+      <span className="sr-only">CSFloat вернётся через</span>
+      {countdown(time - now)}
     </span>
   );
 };

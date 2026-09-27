@@ -23,6 +23,7 @@ import { useItem, useItemListings, useStatus, useSteamPrice } from '@/lib/api/qu
 import type { Flip, Item, MarketId } from '@/lib/api/types';
 import { dealWarning } from '@/lib/deal-warning';
 import { parseItemName } from '@/lib/format/item-name';
+import { timeAgo } from '@/lib/format/time';
 import { formatPercent, formatSignedUsd, formatUsd } from '@/lib/format/money';
 import { MARKETS, MARKET_ORDER } from '@/lib/markets';
 import { useFees } from '@/lib/storage/settings';
@@ -256,6 +257,33 @@ const Verdict = ({ item }: { item: Item }) => {
   );
 };
 
+const STALE_MS = 15 * 60_000;
+
+const Freshness = ({ item, market }: { item: Item; market: MarketId }) => {
+  if (market === 'lisSkins' || !item.checkedAt) return null;
+
+  const checked = item.checkedAt[market];
+  const paused =
+    market === 'csfloat' &&
+    !!item.csfloatPausedUntil &&
+    Date.parse(item.csfloatPausedUntil) > Date.now();
+  const stale = !checked || Date.now() - Date.parse(checked) > STALE_MS;
+
+  return (
+    <p
+      className={cn(
+        'mt-0.5 text-[0.6875rem]',
+        paused || stale ? 'text-warning' : 'text-foreground-subtle',
+      )}
+      title={paused ? 'CSFloat временно не отвечает, цена может быть устаревшей' : undefined}
+    >
+      {paused
+        ? `цена от ${checked ? timeAgo(checked) : 'давно'}, CSFloat на паузе`
+        : `проверено ${timeAgo(checked)}`}
+    </p>
+  );
+};
+
 const MarketPanel = ({ item, market }: { item: Item; market: MarketId }) => {
   const quote = item[market];
   const meta = MARKETS[market];
@@ -279,6 +307,7 @@ const MarketPanel = ({ item, market }: { item: Item; market: MarketId }) => {
       <p className="text-foreground-muted mt-0.5 text-xs">
         {listed ? offersLabel(quote.listings) : 'сейчас нет в продаже'}
       </p>
+      <Freshness item={item} market={market} />
       {quote?.bid ? (
         <p className="text-foreground-muted mt-2 text-xs">
           Скупают за{' '}

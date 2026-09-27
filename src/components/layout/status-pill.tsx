@@ -6,6 +6,8 @@ import { useStatus } from '@/lib/api/queries';
 import { shortAgo, timeAgo } from '@/lib/format/time';
 import { cn } from '@/lib/utils/cn';
 
+import { CsfloatCountdown } from './csfloat-pause';
+
 const TICK_MS = 30_000;
 
 export const StatusPill = ({ className }: { className?: string }) => {
@@ -53,6 +55,7 @@ export const StatusPill = ({ className }: { className?: string }) => {
         aria-hidden
       />
       {updatedAt ? `Цены: ${shortAgo(updatedAt, now)}` : 'Собираем цены...'}
+      <CsfloatCountdown />
     </span>
   );
 };

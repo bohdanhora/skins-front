@@ -7,6 +7,7 @@ import { useEffect, useState } from 'react';
 
 import { rememberValue } from '@/hooks/use-remembered-state';
 
+import { FloatPicks } from '@/components/floats/float-picks';
 import { FloatResults } from '@/components/floats/float-results';
 import { FilterBar } from '@/components/items/filters';
 import { ItemImage } from '@/components/items/item-image';
@@ -200,11 +201,19 @@ export const FloatSearchPanel = ({ initial }: { initial: FloatSearchStart }) => 
       </FilterBar>
 
       {name ? (
-        <FloatResults
-          name={name}
-          range={{ from: floatFrom, to: floatTo }}
-          zoom={wear ? WEAR_RANGES[wear] : null}
-        />
+        <>
+          <FloatPicks
+            key={`${name}-${floatFrom}-${floatTo}`}
+            name={name}
+            floatFrom={floatFrom}
+            floatTo={floatTo}
+          />
+          <FloatResults
+            name={name}
+            range={{ from: floatFrom, to: floatTo }}
+            zoom={wear ? WEAR_RANGES[wear] : null}
+          />
+        </>
       ) : (
         <EmptyState
           icon={<Gauge className="size-6" aria-hidden />}

@@ -96,6 +96,8 @@ export interface Item {
   sales: SalesStats | null;
   top: TopOffer | null;
   priceChangedAt?: string | null;
+  checkedAt?: { whiteMarket: string | null; dmarket: string | null; csfloat: string | null };
+  csfloatPausedUntil?: string | null;
 }
 
 export interface ItemsPage {
@@ -617,4 +619,48 @@ export interface SmartSearch {
   maxPrice?: number;
   sort?: ItemSort;
   note?: string;
+  picks?: { name: string; reason: string; price: number | null }[];
+}
+
+export interface BluePick {
+  market: string;
+  id: string;
+  name: string;
+  price: number;
+  float: number | null;
+  paintSeed: number;
+  blue: BlueShare;
+  url: string;
+  estimate: number;
+  margin: number;
+  multiplier: number;
+  comparableCount: number;
+  source: 'csfloat' | 'calculator';
+  reason: string;
+}
+
+export interface BluePicks {
+  picks: BluePick[];
+  summary: string | null;
+  checked: number;
+  csfloatPausedUntil: string | null;
+}
+
+export interface FloatPick {
+  market: string;
+  price: number;
+  float: number;
+  url: string;
+  worseCheapest: number | null;
+  saving: number;
+  orderPrice: number | null;
+  orderProfit: number | null;
+  reason: string;
+}
+
+export interface FloatPicks {
+  picks: FloatPick[];
+  summary: string | null;
+  checked: number;
+  csfloatPausedUntil: string | null;
 }

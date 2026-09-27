@@ -15,6 +15,8 @@ import { Segmented } from '@/components/ui/segmented';
 import { Select } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useBlueGemWeapons, useBlueGems } from '@/lib/api/queries';
+
+import { BluePicks } from './blue-picks';
 import type { BlueGemListing, BlueGemSearch, BlueGemWear } from '@/lib/api/types';
 import { blueSidesLabel, formatBlue } from '@/lib/format/blue';
 import { formatFloat } from '@/lib/format/float';
@@ -214,6 +216,8 @@ export const BlueGemPanel = () => {
           />
         </div>
       </FilterBar>
+
+      <BluePicks weapon={weapon} wear={wear} />
 
       {weapon ? (
         <div ref={previewRef} className="scroll-mt-24">

@@ -21,6 +21,8 @@ import {
 } from '@/lib/storage/settings';
 import { cn } from '@/lib/utils/cn';
 
+import { AlertSettings } from '@/components/alerts/alert-settings';
+
 import { AssistantSettings } from './assistant-settings';
 import { describeCsfloatQuota } from './csfloat-pause';
 
@@ -181,6 +183,11 @@ export const SettingsDialog = ({ open, onOpenChange }: SettingsDialogProps) => {
               },
             ]}
           />
+        </section>
+
+        <section className="space-y-3">
+          <h3 className="text-sm font-semibold">Уведомления</h3>
+          <AlertSettings />
         </section>
 
         <section className="space-y-3">
