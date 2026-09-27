@@ -101,6 +101,12 @@ export interface Item {
   csfloatPausedUntil?: string | null;
 }
 
+export interface BuyOrders {
+  csfloat: { price: number; amount: number; floatRange: [number, number] | null } | null;
+  float: number | null;
+  unavailable: boolean;
+}
+
 export interface ItemsPage {
   items: Item[];
   total: number;
@@ -309,10 +315,11 @@ export interface Snipe {
   paintSeed: number | null;
   blue: BlueShare | null;
   phase: string | null;
+  orderMarket: 'dmarket' | 'csfloat';
   orderPrice: number;
   orderAmount: number;
   orderFloatPart: string | null;
-  orderFloatRange: [number, number] | null;
+  orderFloatRanges: [number, number][];
   orderPaintSeed: number | null;
   orderPhase: string | null;
   profit: number;

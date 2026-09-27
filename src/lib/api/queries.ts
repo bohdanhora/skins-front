@@ -19,6 +19,7 @@ import type {
   PatternImages,
   TradeUpCatalog,
   BlueGemWear,
+  BuyOrders,
   FloatSearch,
   Inventory,
   Item,
@@ -268,6 +269,13 @@ export const useItemListings = (name: string | null, enabled: boolean) =>
     enabled: name !== null && enabled,
   });
 
+export const useItemBuyOrders = (name: string) =>
+  useQuery({
+    queryKey: ['buy-orders', name],
+    queryFn: ({ signal }) => apiGet<BuyOrders>('/items/buy-orders', { name }, signal),
+    staleTime: 5 * 60_000,
+  });
+
 export type StickerSkinsSort = 'deal' | 'overpay' | 'price';
 
 export interface StickerSkinsQuery {
@@ -299,7 +307,7 @@ export const useSkinsWithStickers = (query: StickerSkinsQuery, enabled: boolean)
 
 export const useSnipes = (query: SnipesQuery) => {
   const fees = useFees();
-  const fullQuery = { ...query, feeDmarket: fees.dmarket };
+  const fullQuery = { ...query, feeDmarket: fees.dmarket, feeCsfloat: fees.csfloat };
 
   return useInfiniteQuery<SnipesPage, Error, InfiniteData<SnipesPage>, unknown[], number>({
     queryKey: ['snipes', fullQuery],

@@ -15,10 +15,11 @@ const snipe = (extra: Partial<Snipe>): Snipe => ({
   paintSeed: 661,
   blue: null,
   phase: null,
+  orderMarket: 'dmarket',
   orderPrice: 5400,
   orderAmount: 4,
   orderFloatPart: null,
-  orderFloatRange: null,
+  orderFloatRanges: [],
   orderPaintSeed: null,
   orderPhase: null,
   profit: 2430,
@@ -30,9 +31,19 @@ const snipe = (extra: Partial<Snipe>): Snipe => ({
 
 describe('snipeReason', () => {
   it('names every condition the order pays for', () => {
-    expect(snipeReason(snipe({ orderFloatPart: 'FT-0', orderFloatRange: [0.15, 0.18] }))).toBe(
+    expect(snipeReason(snipe({ orderFloatPart: 'FT-0', orderFloatRanges: [[0.15, 0.18]] }))).toBe(
       'Платят за флоат 0.15-0.18',
     );
+    expect(
+      snipeReason(
+        snipe({
+          orderFloatRanges: [
+            [0, 0.01],
+            [0.02, 0.03],
+          ],
+        }),
+      ),
+    ).toBe('Платят за флоат 0.00-0.01, 0.02-0.03');
     expect(snipeReason(snipe({ orderPaintSeed: 661, orderPhase: 'ruby' }))).toBe(
       'Платят за паттерн 661, фазу Ruby',
     );

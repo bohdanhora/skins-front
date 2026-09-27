@@ -74,9 +74,9 @@ export const SnipesPanel = ({ onCheck }: { onCheck: (snipe: Snipe) => void }) =>
   return (
     <div className="space-y-6">
       <p className="text-foreground-muted max-w-2xl text-[0.9375rem] leading-relaxed">
-        Лоты, которые уже подходят под заявку на DMarket дороже своей цены. Например, флоат 0.16
-        продают по обычной цене, а за флоат 0.15-0.18 кто-то платит вдвое больше. Купил и сразу
-        отдал в заявку. Прибыль уже с учётом комиссии.
+        Лоты, которые уже подходят под заявку на DMarket или CSFloat дороже своей цены. Например,
+        флоат 0.16 продают по обычной цене, а за флоат 0.15-0.18 кто-то платит вдвое больше. Купил и
+        сразу отдал в заявку. Прибыль уже с учётом комиссии.
       </p>
 
       <div className="bg-warning-soft text-warning flex gap-2.5 rounded-2xl px-4 py-3 text-sm leading-relaxed">

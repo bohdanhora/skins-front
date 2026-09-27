@@ -3,6 +3,7 @@
 import { ArrowDown, ExternalLink, Search } from 'lucide-react';
 
 import { BlueShareTag } from '@/components/items/blue-share-tag';
+import { canGenerate, GenerateButton } from '@/components/items/generate-button';
 import { ItemImage } from '@/components/items/item-image';
 import { ItemTitle } from '@/components/items/item-title';
 import { Button } from '@/components/ui/button';
@@ -28,7 +29,9 @@ const phaseLabel = (phase: string): string => PHASES[phase] ?? phase;
 
 export const snipeReason = (snipe: Snipe): string => {
   const reasons = [
-    snipe.orderFloatRange ? `флоат ${formatRange(snipe.orderFloatRange)}` : null,
+    snipe.orderFloatRanges.length > 0
+      ? `флоат ${snipe.orderFloatRanges.map(formatRange).join(', ')}`
+      : null,
     snipe.orderPaintSeed !== null ? `паттерн ${snipe.orderPaintSeed}` : null,
     snipe.orderPhase ? `фазу ${phaseLabel(snipe.orderPhase)}` : null,
   ].filter(Boolean);
@@ -43,6 +46,7 @@ interface SnipeCardProps {
 
 export const SnipeCard = ({ snipe, onCheck }: SnipeCardProps) => {
   const market = MARKETS[snipe.source];
+  const orderMarket = MARKETS[snipe.orderMarket];
 
   return (
     <article className="bg-surface flex flex-col rounded-3xl p-4 shadow-[var(--shadow-card)]">
@@ -55,6 +59,14 @@ export const SnipeCard = ({ snipe, onCheck }: SnipeCardProps) => {
           imageClassName="p-1.5"
         />
         <ItemTitle name={snipe.name} />
+        {canGenerate(snipe.category) ? (
+          <GenerateButton
+            name={snipe.name}
+            float={snipe.float}
+            seed={snipe.paintSeed}
+            className="ml-auto self-start"
+          />
+        ) : null}
       </div>
 
       <div className="mt-4 space-y-1.5">
@@ -86,10 +98,10 @@ export const SnipeCard = ({ snipe, onCheck }: SnipeCardProps) => {
           <ArrowDown className="size-4" />
         </div>
 
-        <div className="bg-market-dm-soft rounded-2xl px-3.5 py-3">
+        <div className={cn('rounded-2xl px-3.5 py-3', orderMarket.soft)}>
           <div className="flex items-center justify-between gap-2">
             <span className="text-foreground-muted text-xs">
-              Заявка на DMarket, {snipe.orderAmount}{' '}
+              Заявка на {orderMarket.name}, {snipe.orderAmount}{' '}
               {plural(snipe.orderAmount, ['штука', 'штуки', 'штук'])}
             </span>
             <span className="numeric text-[0.9375rem] font-semibold">

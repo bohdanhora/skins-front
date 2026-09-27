@@ -46,10 +46,12 @@ const FloatPage = () => {
   const [searchKey, setSearchKey] = useState(0);
 
   const check = (snipe: Snipe) => {
+    const ranges = snipe.orderFloatRanges;
+
     setStart({
       name: snipe.name,
-      from: snipe.orderFloatRange ? String(snipe.orderFloatRange[0]) : '',
-      to: snipe.orderFloatRange ? String(snipe.orderFloatRange[1]) : '',
+      from: ranges.length > 0 ? String(ranges[0][0]) : '',
+      to: ranges.length > 0 ? String(ranges[ranges.length - 1][1]) : '',
     });
     setSearchKey((key) => key + 1);
     setTab('search');

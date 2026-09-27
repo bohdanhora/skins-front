@@ -20,10 +20,17 @@ import { Button } from '@/components/ui/button';
 import { Dialog } from '@/components/ui/dialog';
 import { Skeleton } from '@/components/ui/skeleton';
 import { usePurchases } from '@/lib/api/account';
-import { useItem, useItemListings, useStatus, useSteamPrice } from '@/lib/api/queries';
+import {
+  useItem,
+  useItemBuyOrders,
+  useItemListings,
+  useStatus,
+  useSteamPrice,
+} from '@/lib/api/queries';
 import type { Flip, Item, MarketId } from '@/lib/api/types';
 import { dealWarning } from '@/lib/deal-warning';
 import { parseItemName } from '@/lib/format/item-name';
+import { formatRange } from '@/lib/format/float';
 import { timeAgo } from '@/lib/format/time';
 import { formatPercent, formatSignedUsd, formatUsd } from '@/lib/format/money';
 import { MARKETS, MARKET_ORDER } from '@/lib/markets';
@@ -339,10 +346,35 @@ const MarketPanel = ({ item, market }: { item: Item; market: MarketId }) => {
   );
 };
 
+const csfloatInstant = (item: Item, orderPrice: number, fee: number): Flip | null => {
+  const cheapest = MARKET_ORDER.flatMap((market) => {
+    const price = item[market]?.price;
+
+    return price ? [[market, price] as const] : [];
+  }).sort((left, right) => left[1] - right[1])[0];
+
+  if (!cheapest) return null;
+
+  const [buyOn, buyPrice] = cheapest;
+  const profit = Math.floor(orderPrice * (1 - fee / 100)) - buyPrice;
+
+  return {
+    buyOn,
+    sellOn: 'csfloat',
+    buyPrice,
+    sellPrice: orderPrice,
+    profit,
+    percent: Math.round((profit / buyPrice) * 10_000) / 100,
+  };
+};
+
 const ResaleSection = ({ item }: { item: Item }) => {
   const fees = useFees();
+  const orders = useItemBuyOrders(item.name);
+  const order = orders.data?.csfloat ?? null;
+  const toCsfloat = order ? csfloatInstant(item, order.price, fees.csfloat) : null;
 
-  if (!item.flip && !item.instant) {
+  if (!item.flip && !item.instant && !toCsfloat) {
     return null;
   }
 
@@ -364,6 +396,14 @@ const ResaleSection = ({ item }: { item: Item }) => {
             title="Купить на White, сразу продать по заявке DMarket"
             note={`заявка ${formatUsd(item.instant.sellPrice)}, ждать не нужно`}
             flip={item.instant}
+          />
+        ) : null}
+        {order && toCsfloat ? (
+          <ResaleRow
+            icon={<Zap className="size-4" aria-hidden />}
+            title={`Купить на ${MARKETS[toCsfloat.buyOn].short}, сразу продать по заявке CSFloat`}
+            note={`заявка ${formatUsd(order.price)}${order.floatRange ? ` на флоат ${formatRange(order.floatRange)}` : ''}, ждать не нужно`}
+            flip={toCsfloat}
           />
         ) : null}
       </div>
