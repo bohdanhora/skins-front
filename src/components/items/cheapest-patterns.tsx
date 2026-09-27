@@ -1,7 +1,7 @@
 'use client';
 
 import { useCheapestPatterns } from '@/lib/api/queries';
-import { blueSidesLabel, formatBlue } from '@/lib/format/blue';
+import { blueSourceLabel, formatBlue } from '@/lib/format/blue';
 import { MARKETS } from '@/lib/markets';
 import { cn } from '@/lib/utils/cn';
 
@@ -12,7 +12,10 @@ export const CheapestPatterns = ({ name }: { name: string }) => {
   if (listings.length === 0) return null;
 
   return (
-    <div className="mt-2 space-y-0.5 px-2.5" title={`Самый дешёвый лот, ${blueSidesLabel(name)}`}>
+    <div
+      className="mt-2 space-y-0.5 px-2.5"
+      title={`Самый дешёвый лот, ${blueSourceLabel('calculator')}`}
+    >
       {listings.map((listing) => (
         <p
           key={listing.market}
@@ -23,7 +26,7 @@ export const CheapestPatterns = ({ name }: { name: string }) => {
             aria-hidden
           />
           <span>#{listing.paintSeed}</span>
-          <span className="text-accent font-medium">{formatBlue(listing.blue)}</span>
+          <span className="text-accent font-medium">{formatBlue(name, listing.blue)}</span>
         </p>
       ))}
     </div>

@@ -2,6 +2,7 @@
 
 import { stickerLabel } from '@/components/stickers/sticker-picker';
 import type { SellMarketId } from '@/lib/api/types';
+import { blueSourceLabel, formatBlue } from '@/lib/format/blue';
 import { formatFloat } from '@/lib/format/float';
 import { formatSignedUsd, formatUsd } from '@/lib/format/money';
 import { plural } from '@/lib/format/time';
@@ -94,7 +95,7 @@ export const MarketTable = ({ options, best, amount, breakEven }: MarketTablePro
   );
 };
 
-export const ValueDetails = ({ valuation }: { valuation: Valuation }) => {
+export const ValueDetails = ({ name, valuation }: { name: string; valuation: Valuation }) => {
   const { blue, stickers, float } = valuation;
 
   if (!blue && stickers.length === 0 && !float) return null;
@@ -106,9 +107,9 @@ export const ValueDetails = ({ valuation }: { valuation: Valuation }) => {
           <p className="text-foreground-subtle text-[0.6875rem]">Синий</p>
           <p>
             <span className="text-foreground font-semibold">
-              {percent(blue.blue.playside)} / {percent(blue.blue.backside)}
+              {formatBlue(name, blue.blue, blue.source)}
             </span>{' '}
-            {blue.source === 'csfloat' ? 'по CSFloat' : 'по калькулятору'}
+            <span className="text-[0.75rem]">({blueSourceLabel(blue.source)})</span>
           </p>
           <p className="text-[0.75rem]">
             {blue.comparableCount}{' '}

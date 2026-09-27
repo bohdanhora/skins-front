@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
 import { usePatternImages } from '@/lib/api/queries';
 import type { PatternImages } from '@/lib/api/types';
-import { blueSidesLabel, formatBlue } from '@/lib/format/blue';
+import { blueSourceLabel, formatBlue } from '@/lib/format/blue';
 import { cn } from '@/lib/utils/cn';
 
 const MAX_SEED = 1000;
@@ -76,8 +76,11 @@ export const PatternPreview = ({
           className="numeric w-24"
         />
         {blue ? (
-          <span title={blueSidesLabel(name)} className="text-accent numeric text-sm font-semibold">
-            {formatBlue(blue)}
+          <span
+            title={blueSourceLabel('calculator')}
+            className="text-accent numeric text-sm font-semibold"
+          >
+            {formatBlue(name, blue)}
           </span>
         ) : null}
         <div className="ml-auto flex items-center gap-3">

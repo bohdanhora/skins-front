@@ -1,14 +1,23 @@
 import { describe, expect, it } from 'vitest';
 
-import { blueSidesLabel, formatBlue, isCaseHardened } from './blue';
+import { formatBlue, isCaseHardened } from './blue';
 import { parseItemName } from './item-name';
 import { formatPercent, formatSignedUsd, formatUsd } from './money';
 import { plural, timeAgo } from './time';
 
 describe('blue gem', () => {
   it('shows both sides with one decimal', () => {
-    expect(formatBlue({ playside: 97.64, backside: 19.2 })).toBe('синий 97,6% / 19,2%');
-    expect(blueSidesLabel('AK-47 | Case Hardened (Field-Tested)')).toBe('верх / магазин');
+    const blue = { playside: 97.64, backside: 19.2 };
+
+    expect(formatBlue('AK-47 | Case Hardened (Field-Tested)', blue)).toBe(
+      'верх 97,6% · магазин 19,2%',
+    );
+    expect(formatBlue('AK-47 | Case Hardened (Field-Tested)', blue, 'csfloat')).toBe(
+      'лицо 97,6% · зад 19,2%',
+    );
+    expect(formatBlue('★ Karambit | Case Hardened (Field-Tested)', blue)).toBe(
+      'лицо 97,6% · зад 19,2%',
+    );
     expect(isCaseHardened('★ StatTrak™ Karambit | Case Hardened (Minimal Wear)')).toBe(true);
     expect(isCaseHardened('AK-47 | Redline (Field-Tested)')).toBe(false);
   });

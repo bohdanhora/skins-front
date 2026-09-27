@@ -6,14 +6,13 @@ import { Button } from '@/components/ui/button';
 import { useSessionToken } from '@/lib/api/account';
 import { useBluePicks } from '@/lib/api/assistant';
 import type { BlueGemWear } from '@/lib/api/types';
+import { formatBlue } from '@/lib/format/blue';
 import { formatFloat } from '@/lib/format/float';
 import { formatSignedUsd, formatUsd } from '@/lib/format/money';
 import { plural } from '@/lib/format/time';
 import { cn } from '@/lib/utils/cn';
 
 const clock = new Intl.DateTimeFormat('ru-RU', { hour: '2-digit', minute: '2-digit' });
-
-const percent = (value: number): string => `${value.toFixed(1).replace('.', ',')}%`;
 
 export const BluePicks = ({
   weapon,
@@ -99,8 +98,8 @@ export const BluePicks = ({
                 </a>
               </div>
               <p className="text-foreground-muted numeric mt-1 text-xs">
-                #{pick.paintSeed} · синий {percent(pick.blue.playside)}
-                {pick.source === 'calculator' ? ' (калькулятор)' : ''}
+                #{pick.paintSeed} · {formatBlue(pick.name, pick.blue, pick.source)}
+                {pick.source === 'csfloat' ? ' (CSFloat)' : ''}
                 {pick.float !== null ? ` · флоат ${formatFloat(pick.float, 4)}` : ''} · цена{' '}
                 <span className="text-foreground font-medium">{formatUsd(pick.price)}</span>,
                 похожие уходили около {formatUsd(pick.estimate)} · {pick.comparableCount}{' '}

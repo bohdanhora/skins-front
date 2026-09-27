@@ -349,7 +349,7 @@ export const PurchaseRow = ({
             amount={purchase.amount}
             breakEven={breakEven}
           />
-          <ValueDetails valuation={valuation} />
+          <ValueDetails name={purchase.name} valuation={valuation} />
         </div>
       ) : null}
     </article>
