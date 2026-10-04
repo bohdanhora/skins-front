@@ -6,6 +6,7 @@ import { useState, type ReactNode } from 'react';
 
 import { DealWatcher } from '@/components/alerts/deal-watcher';
 import { ItemDialogProvider } from '@/components/items/item-dialog-provider';
+import { AccessGate } from '@/components/layout/access-gate';
 import { AccountSync } from '@/components/layout/account-sync';
 import { PurchaseFormProvider } from '@/components/purchases/purchase-form';
 import { ApiError } from '@/lib/api/client';
@@ -39,13 +40,15 @@ export const Providers = ({ children }: { children: ReactNode }) => {
   return (
     <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
       <QueryClientProvider client={client}>
-        <AccountSync />
-        <PurchaseFormProvider>
-          <ItemDialogProvider>
-            {children}
-            <DealWatcher />
-          </ItemDialogProvider>
-        </PurchaseFormProvider>
+        <AccessGate>
+          <AccountSync />
+          <PurchaseFormProvider>
+            <ItemDialogProvider>
+              {children}
+              <DealWatcher />
+            </ItemDialogProvider>
+          </PurchaseFormProvider>
+        </AccessGate>
       </QueryClientProvider>
     </ThemeProvider>
   );

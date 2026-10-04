@@ -2,6 +2,8 @@ import { CHANGE_EVENT } from '@/lib/storage/local-store';
 
 export const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4100/api';
 export const SESSION_KEY = 'skins.session';
+export const ACCESS_KEY = 'skins.access';
+export const ACCESS_REQUIRED = 'access_required';
 
 export const readSession = (): string | null => {
   try {
@@ -25,12 +27,43 @@ export const writeSession = (token: string | null): void => {
   window.dispatchEvent(new Event(CHANGE_EVENT));
 };
 
+export const readAccess = (): string | null => {
+  try {
+    const raw = window.localStorage.getItem(ACCESS_KEY);
+
+    return raw ? (JSON.parse(raw) as string) : null;
+  } catch {
+    return null;
+  }
+};
+
+export const writeAccess = (token: string | null): void => {
+  try {
+    if (token) {
+      window.localStorage.setItem(ACCESS_KEY, JSON.stringify(token));
+    } else {
+      window.localStorage.removeItem(ACCESS_KEY);
+    }
+  } catch {}
+
+  window.dispatchEvent(new Event(CHANGE_EVENT));
+};
+
 const UNAUTHORIZED = 401;
+const FORBIDDEN = 403;
 
 const authHeaders = (): Record<string, string> => {
-  const token = typeof window === 'undefined' ? null : readSession();
+  if (typeof window === 'undefined') {
+    return {};
+  }
 
-  return token ? { Authorization: `Bearer ${token}` } : {};
+  const token = readSession();
+  const access = readAccess();
+
+  return {
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    ...(access ? { 'X-Access-Token': access } : {}),
+  };
 };
 
 export class ApiError extends Error {
@@ -84,11 +117,17 @@ const readMessage = (payload: unknown): string => {
 const fail = async (response: Response): Promise<never> => {
   const payload: unknown = await response.json().catch(() => null);
 
+  const message = readMessage(payload);
+
   if (response.status === UNAUTHORIZED && readSession()) {
     writeSession(null);
   }
 
-  throw new ApiError(response.status, readMessage(payload));
+  if (response.status === FORBIDDEN && message === ACCESS_REQUIRED) {
+    writeAccess(null);
+  }
+
+  throw new ApiError(response.status, message);
 };
 
 export const apiGet = async <T>(
