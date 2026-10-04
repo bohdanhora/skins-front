@@ -12,10 +12,21 @@ const inter = Inter({
   variable: '--font-inter',
 });
 
+const description = 'Сравнение цен на скины CS2 на white.market, DMarket, CSFloat и lis-skins.';
+
 export const metadata: Metadata = {
+  metadataBase: new URL('https://skins-front-production.up.railway.app'),
   title: { default: 'SkinScout', template: '%s · SkinScout' },
-  description: 'Сравнение цен на скины CS2 на white.market, DMarket, CSFloat и lis-skins.',
+  description,
   applicationName: 'SkinScout',
+  openGraph: {
+    type: 'website',
+    url: '/',
+    siteName: 'SkinScout',
+    title: 'SkinScout',
+    description,
+  },
+  twitter: { card: 'summary_large_image', title: 'SkinScout', description },
 };
 
 export const viewport: Viewport = {
